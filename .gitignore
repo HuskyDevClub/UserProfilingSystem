@@ -3,3 +3,4 @@ __pycache__/
 output/
 public-test-data/
 training/
+test.py

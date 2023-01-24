@@ -36,13 +36,13 @@ class User:
     def to_dict(self) -> dict[str, Any]:
         return {
             "id": self.__id,
-            "\nage_group": self.__age_group,
-            "\ngender": self.__gender,
-            "\nextrovert": self.__extrovert,
-            "\nneurotic": self.__neurotic,
-            "\nagreeable": self.__agreeable,
-            "\nconscientious": self.__conscientious,
-            "\nopen": self.__open,
+            "age_group": self.__age_group,
+            "gender": self.__gender,
+            "extrovert": self.__extrovert,
+            "neurotic": self.__neurotic,
+            "agreeable": self.__agreeable,
+            "conscientious": self.__conscientious,
+            "open": self.__open,
         }
 
     def save(self, output_dir: str) -> None:
