@@ -1,6 +1,6 @@
 import os
-from typing import Any
 import xml.etree.cElementTree as ET
+from typing import Any
 
 
 class User:
@@ -88,7 +88,13 @@ class Users:
 
     @staticmethod
     def convert_gender(_gender: int) -> str:
-        return "male" if _gender == 0 else "female"
+        return (
+            "male"
+            if _gender == "0.0"
+            else "female"
+            if _gender == "1.0"
+            else Exception("unknown gender")
+        )
 
     @classmethod
     def from_dict(cls, _data: dict[str, Any]) -> User:

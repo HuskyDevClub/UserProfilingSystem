@@ -1,6 +1,9 @@
 {
     "cSpell.words": [
         "LIWC",
+        "matplotlib",
+        "pyplot",
+        "sklearn",
         "spamreader",
         "userid"
     ]

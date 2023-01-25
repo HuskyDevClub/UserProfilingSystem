@@ -4,3 +4,4 @@ output/
 public-test-data/
 training/
 test.py
+*.h5
