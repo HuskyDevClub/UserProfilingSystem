@@ -1,5 +1,7 @@
 {
     "cSpell.words": [
+        "frontalface",
+        "haarcascade",
         "LIWC",
         "matplotlib",
         "pyplot",

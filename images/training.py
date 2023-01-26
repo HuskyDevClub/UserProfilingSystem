@@ -1,13 +1,12 @@
-import csv
 import os
 import sys
-from typing import Any, Optional
 
 import numpy
-from model import get_model
-from parameters import MODEL_WAS_SAVED_TO
+from model import get_gender_model, get_age_model
+from parameters import GENDER_MODEL_WAS_SAVED_TO, AGE_MODEL_WAS_SAVED_TO
 from sklearn.model_selection import train_test_split
 from tensorflow.keras.callbacks import ModelCheckpoint
+from tensorflow.keras.models import load_model
 
 from images import Images
 
@@ -16,60 +15,69 @@ from utils.user import User, Users
 
 sys.path.pop()
 
-# database for storing user information, key is user id
-database: dict[str, User] = {}
-# all the information types
-keys: Optional[tuple[str, ...]] = None
+import argparse
+
+# using argparse to parse the argument from command line
+parser: argparse.ArgumentParser = argparse.ArgumentParser()
+parser.add_argument("-m", help="what to train")
+parser.add_argument("-e", help="epochs")
+args: argparse.Namespace = parser.parse_args()
+
+mode: str = args.m
+_epochs: int = int(args.e)
 
 # input path
 ABS_PATH: str = os.path.join("..", "training")
+# output path
+if mode == "g":
+    _out_path = GENDER_MODEL_WAS_SAVED_TO
+elif mode == "a":
+    _out_path = AGE_MODEL_WAS_SAVED_TO
+else:
+    raise Exception("Unknown mode!")
 
-profile_csv_location = os.path.join(ABS_PATH, "profile", "profile.csv")
-
-print("Start reading data from location:", profile_csv_location)
-
-with open(profile_csv_location, newline="") as f:
-    # read the csv file
-    spamreader = csv.reader(f, delimiter=" ", quotechar="|")
-    for row in spamreader:
-        _temp: list[str] = row[0].split(",")
-        if keys is not None:
-            userInfo: dict[str, Any] = {}
-            assert len(keys) == len(_temp)
-            for i, _value in enumerate(keys):
-                userInfo[_value] = _temp[i]
-            theUser = Users.from_dict(userInfo)
-            database[theUser.get_id()] = theUser
-        else:
-            keys = tuple(_temp)
-
-print("Finish reading data from location:", profile_csv_location)
+# database for storing user information, key is user id
+database: dict[str, User] = Users.load_database(
+    os.path.join(ABS_PATH, "profile", "profile.csv")
+)
 
 # Load dataset
 pixels = []
-genders = []
-
+targets = []
 for _key in database:
-    pixels.append(
-        numpy.asarray(
-            Images.load(os.path.join(ABS_PATH, "image", "{}.jpg".format(_key)))
-        )
-    )
-    genders.append(numpy.array(0 if database[_key].get_gender() == "male" else 1))
+    imageName: str = "{}.jpg".format(_key)
+    _path: str = os.path.join(ABS_PATH, "image", imageName)
+    if not os.path.exists(_path):
+        raise FileNotFoundError("Cannot find image", _path)
+    elif (_face := Images.obtain_classified_face(_path)) is not None:
+        pixels.append(numpy.asarray(_face))
+        if mode == "g":
+            targets.append(
+                numpy.array(0 if database[_key].get_gender() == "male" else 1)
+            )
+        else:
+            targets.append(database[_key].get_age_group_index())
 
 pixels = numpy.asarray(pixels)
-genders = numpy.asarray(genders, numpy.uint64)
+targets = numpy.asarray(targets, numpy.uint16)
 
 # Split dataset for training and test
-x_train, x_test, y_train, y_test = train_test_split(pixels, genders, random_state=100)
+x_train, x_test, y_train, y_test = train_test_split(pixels, targets, random_state=100)
 
-# build the model
-model = get_model()
-model.summary()
+if os.path.exists(_out_path):
+    # if model already exists, the continue to train
+    model = load_model(_out_path)
+else:
+    # build the model
+    if mode == "g":
+        model = get_gender_model()
+    else:
+        model = get_age_model()
+    model.summary()
 
 # Model Checkpoint
 check_pointer = ModelCheckpoint(
-    MODEL_WAS_SAVED_TO,
+    _out_path,
     monitor="loss",
     verbose=1,
     save_best_only=True,
@@ -84,7 +92,7 @@ save = model.fit(
     x_train,
     y_train,
     validation_data=(x_test, y_test),
-    epochs=10,
+    epochs=_epochs,
     callbacks=[callback_list],
 )
 

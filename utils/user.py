@@ -1,13 +1,14 @@
+import csv
 import os
 import xml.etree.cElementTree as ET
-from typing import Any
+from typing import Any, Optional
 
 
 class User:
     def __init__(
         self,
         _id: str,
-        _age_group: str,
+        _age: int,
         _gender: str,
         _extrovert: float | int,
         _neurotic: float | int,
@@ -16,7 +17,7 @@ class User:
         _open: float | int,
     ) -> None:
         self.__id: str = _id
-        self.__age_group: str = _age_group
+        self.__age: int = _age
         self.__gender: str = _gender
         self.__extrovert: float | int = _extrovert
         self.__neurotic: float | int = _neurotic
@@ -27,8 +28,14 @@ class User:
     def get_id(self) -> str:
         return self.__id
 
+    def get_age(self) -> int:
+        return self.__age
+
     def get_age_group(self) -> str:
-        return self.__age_group
+        return Users.convert_age_group(self.__age)
+
+    def get_age_group_index(self) -> int:
+        return Users.convert_age_group_index(self.__age)
 
     def get_gender(self) -> str:
         return self.__gender
@@ -36,7 +43,7 @@ class User:
     def to_dict(self) -> dict[str, Any]:
         return {
             "id": self.__id,
-            "age_group": self.__age_group,
+            "age_group": self.get_age_group(),
             "gender": self.__gender,
             "extrovert": self.__extrovert,
             "neurotic": self.__neurotic,
@@ -60,7 +67,7 @@ class User:
                 [
                     "<user\n",
                     '   id="{}"\n'.format(self.__id),
-                    'age_group="{}"\n'.format(self.__age_group),
+                    'age_group="{}"\n'.format(self.get_age_group()),
                     'gender="{}"\n'.format(self.__gender),
                     'extrovert="{}"\n'.format(self.__extrovert),
                     'neurotic="{}"\n'.format(self.__neurotic),
@@ -87,6 +94,18 @@ class Users:
             return "50-xx"
 
     @staticmethod
+    def convert_age_group_index(_age: float | int) -> str:
+        _theAge: float = float(_age)
+        if _theAge <= 24:
+            return 0
+        elif _theAge <= 34:
+            return 1
+        elif _theAge <= 49:
+            return 2
+        else:
+            return 3
+
+    @staticmethod
     def convert_gender(_gender: int) -> str:
         return (
             "male"
@@ -100,7 +119,7 @@ class Users:
     def from_dict(cls, _data: dict[str, Any]) -> User:
         return User(
             _data["userid"],
-            cls.convert_age_group(_data["age"]),
+            round(float(_data["age"])),
             cls.convert_gender(_data["gender"]),
             float(_data["ext"]),
             float(_data["neu"]),
@@ -108,3 +127,26 @@ class Users:
             float(_data["con"]),
             float(_data["ope"]),
         )
+
+    def load_database(profile_csv_location: str) -> dict[str, User]:
+        # database for storing user information, key is user id
+        database: dict[str, User] = {}
+        # all the information types
+        keys: Optional[tuple[str, ...]] = None
+        # open csv and start loading data
+        with open(profile_csv_location, newline="") as f:
+            # read the csv file
+            spamreader = csv.reader(f, delimiter=" ", quotechar="|")
+            for row in spamreader:
+                _temp: list[str] = row[0].split(",")
+                if keys is not None:
+                    userInfo: dict[str, Any] = {}
+                    assert len(keys) == len(_temp)
+                    for i, _value in enumerate(keys):
+                        userInfo[_value] = _temp[i]
+                    theUser = Users.from_dict(userInfo)
+                    database[theUser.get_id()] = theUser
+                else:
+                    keys = tuple(_temp)
+        # return data
+        return database
