@@ -1,13 +1,13 @@
-import glob
-
 import numpy
-from parameters import GENDER_MODEL_WAS_SAVED_TO, AGE_MODEL_WAS_SAVED_TO
 from tensorflow import keras
 
-from images import Images
+from .images import Images
+from .model import ImageModel
 
-reconstructed_gender_model = keras.models.load_model(GENDER_MODEL_WAS_SAVED_TO)
-reconstructed_age_model = keras.models.load_model(AGE_MODEL_WAS_SAVED_TO)
+reconstructed_gender_model = keras.models.load_model(
+    ImageModel.GENDER_MODEL_WAS_SAVED_TO
+)
+reconstructed_age_model = keras.models.load_model(ImageModel.AGE_MODEL_WAS_SAVED_TO)
 
 _in = [
     # numpy.asarray(Images.load(_path)) for _path in glob.glob("../training/image/*.jpg")

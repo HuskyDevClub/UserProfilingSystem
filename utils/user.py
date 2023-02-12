@@ -82,6 +82,17 @@ class User:
 
 class Users:
     @staticmethod
+    def convert_to_age(_age_group: str) -> int:
+        if _age_group == "xx-24":
+            return 24
+        elif _age_group == "25-34":
+            return 34
+        elif _age_group == "35-49":
+            return 49
+        else:
+            return 50
+
+    @staticmethod
     def convert_age_group(_age: float | int) -> str:
         _theAge: float = float(_age)
         if _theAge <= 24:
@@ -119,13 +130,13 @@ class Users:
     def from_dict(cls, _data: dict[str, Any]) -> User:
         return User(
             _data["userid"],
-            round(float(_data["age"])),
-            cls.convert_gender(_data["gender"]),
-            float(_data["ext"]),
-            float(_data["neu"]),
-            float(_data["agr"]),
-            float(_data["con"]),
-            float(_data["ope"]),
+            round(float(_data["age"])) if _data["age"] != "-" else -1,
+            cls.convert_gender(_data["gender"]) if _data["gender"] != "-" else "male",
+            float(_data["ext"]) if _data["ext"] != "-" else -1,
+            float(_data["neu"]) if _data["neu"] != "-" else -1,
+            float(_data["agr"]) if _data["agr"] != "-" else -1,
+            float(_data["con"]) if _data["con"] != "-" else -1,
+            float(_data["ope"]) if _data["ope"] != "-" else -1,
         )
 
     def load_database(profile_csv_location: str) -> dict[str, User]:

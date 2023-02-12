@@ -1,5 +1,6 @@
 from os import path as OS_PATH
 from typing import Sequence
+
 import cv2
 
 

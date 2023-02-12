@@ -5,3 +5,4 @@ public-test-data/
 training/
 test.py
 *.h5
+average/model.json
