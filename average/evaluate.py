@@ -9,7 +9,6 @@ from .train import TrainAverageModel
 
 
 class EvaluateAverageModel:
-
     __MODEL: dict = {}
 
     with open(TrainAverageModel.MODEL_PATH, "r", encoding="utf-8") as f:

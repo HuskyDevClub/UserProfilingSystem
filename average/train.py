@@ -7,14 +7,12 @@ from utils.user import User, Users
 
 
 class TrainAverageModel:
-
     MODEL_PATH: str = os.path.join(
         os.path.dirname(os.path.abspath(__file__)), "model.json"
     )
 
     @classmethod
     def train(cls, _in: str):
-
         # database for storing user information, key is user id
         database: dict[str, User] = {}
         # all the information types

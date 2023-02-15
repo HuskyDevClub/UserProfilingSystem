@@ -40,6 +40,21 @@ class User:
     def get_gender(self) -> str:
         return self.__gender
 
+    def get_extrovert(self) -> float | int:
+        return self.__extrovert
+
+    def get_neurotic(self) -> float | int:
+        return self.__neurotic
+
+    def get_agreeable(self) -> float | int:
+        return self.__agreeable
+
+    def get_conscientious(self) -> float | int:
+        return self.__conscientious
+
+    def get_open(self) -> float | int:
+        return self.__open
+
     def to_dict(self) -> dict[str, Any]:
         return {
             "id": self.__id,
@@ -105,7 +120,7 @@ class Users:
             return "50-xx"
 
     @staticmethod
-    def convert_age_group_index(_age: float | int) -> str:
+    def convert_age_group_index(_age: float | int) -> int:
         _theAge: float = float(_age)
         if _theAge <= 24:
             return 0

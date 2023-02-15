@@ -13,4 +13,4 @@ inputDir: str = args.i
 
 # TrainAverageModel.train(inputDir)
 
-TrainImageModel.train(inputDir, "g", 5)
+TrainImageModel.train(inputDir, 10)

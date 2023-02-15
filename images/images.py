@@ -5,7 +5,6 @@ import cv2
 
 
 class Images:
-
     # face recognition classifier
     __FACE_CASCADE: cv2.CascadeClassifier = cv2.CascadeClassifier(
         OS_PATH.join(

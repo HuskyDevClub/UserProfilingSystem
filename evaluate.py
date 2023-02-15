@@ -2,6 +2,7 @@ import argparse
 import os
 
 from average.evaluate import EvaluateAverageModel
+from images.evaluate import EvaluateImageModel
 
 # using argparse to parse the argument from command line
 parser: argparse.ArgumentParser = argparse.ArgumentParser()
@@ -17,4 +18,5 @@ outputDir: str = args.o
 if not os.path.exists(outputDir):
     os.mkdir(outputDir)
 
-EvaluateAverageModel.process(inputDir, outputDir)
+# EvaluateAverageModel.process(inputDir, outputDir)
+EvaluateImageModel.process(inputDir, outputDir)
