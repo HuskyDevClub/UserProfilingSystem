@@ -1,6 +1,11 @@
 {
     "cSpell.words": [
+        "frontalface",
+        "haarcascade",
         "LIWC",
+        "matplotlib",
+        "pyplot",
+        "sklearn",
         "spamreader",
         "userid"
     ]
