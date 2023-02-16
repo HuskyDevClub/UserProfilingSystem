@@ -12,7 +12,7 @@ class Images:
         )
     )
     # image shape
-    SIZE: tuple[int, int] = (64, 64)
+    SIZE: tuple[int, int] = (128, 128)
 
     @staticmethod
     def load(path: str) -> cv2.Mat:
@@ -36,8 +36,13 @@ class Images:
         )
 
     @classmethod
-    def obtain_classified_face(cls, path: str) -> cv2.Mat:
+    def obtain_classified_face(
+        cls, path: str, disableFaceFinding: bool = False
+    ) -> cv2.Mat:
         _img: cv2.Mat = cls.load(path)
+        if disableFaceFinding is True:
+            return cls.resize(_img)
+        # find faces
         faces = cls.find_faces(_img)
         if len(faces) <= 0:
             return cls.resize(_img)

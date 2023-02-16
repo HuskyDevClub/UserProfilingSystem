@@ -23,7 +23,7 @@ class EvaluateImageModel:
             [
                 numpy.asarray(
                     Images.obtain_classified_face(
-                        os.path.join(_input, "image", "{}.jpg".format(_id))
+                        os.path.join(_input, "image", "{}.jpg".format(_id)), True
                     )
                 )
                 for _id in _user_ids
