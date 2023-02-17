@@ -8,6 +8,7 @@ parser: argparse.ArgumentParser = argparse.ArgumentParser()
 parser.add_argument("-i", help="input folder")
 parser.add_argument("-e", help="number of epochs")
 parser.add_argument("-s", help="screenshot")
+parser.add_argument("-x", help="screenshot")
 args: argparse.Namespace = parser.parse_args()
 
 # obtain input directory from command line
@@ -19,4 +20,4 @@ if args.s is not None:
 
 # TrainAverageModel.train(inputDir)
 
-TrainImageModel.train(inputDir)
+TrainImageModel.train(inputDir, _max=int(args.x) if args.x is not None else None)

@@ -4,7 +4,7 @@ from typing import Optional
 import matplotlib.pyplot as plt
 import numpy
 from sklearn.model_selection import train_test_split
-from tensorflow.keras.callbacks import ModelCheckpoint
+from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping
 
 from utils.user import User, Users
 
@@ -40,23 +40,30 @@ class TrainImageModel:
             mode="auto",
             save_freq="epoch",
         )
-        callback_list = [check_pointer]
+        # Model Early Stopping Rules
+        early_stopping = EarlyStopping(monitor="val_loss", patience=cls.epochs // 3)
         # Fit the model
         result = model.fit(
             x_train,
             y_train,
             validation_data=(x_test, y_test),
             epochs=cls.epochs,
-            callbacks=[callback_list],
+            callbacks=[check_pointer],
         )
         # Final evaluation of the model
         scores = model.evaluate(x_test, y_test, verbose=0)
         print("Baseline Error: %.2f%%" % (100 - scores[1] * 100))
         # show validation loss curve
         if cls.savefig is True:
+            plt.clf()
+            plt.plot(result.history["accuracy"], label="accuracy")
+            plt.plot(result.history["val_accuracy"], label="val_accuracy")
             plt.plot(result.history["val_loss"], label="val_loss")
             plt.xlabel("epochs")
-            plt.title("validation loss curve for " + model_save_to)
+            plt.xlabel("Epoch")
+            plt.ylabel("Accuracy")
+            plt.legend(loc="lower right")
+            plt.title("validation loss curve for " + os.path.basename(model_save_to))
             plt.savefig(model_save_to.replace(".h5", ".png"))
 
     @classmethod
@@ -70,7 +77,6 @@ class TrainImageModel:
         database: dict[str, User] = Users.load_database(
             os.path.join(_input, "profile", "profile.csv")
         )
-
         # Load dataset
         pixels: list = []
         # init dictionary
@@ -82,12 +88,16 @@ class TrainImageModel:
             targets[key] = []
         # load all data
         for _key, value in database.items():
-            imageName: str = "{}.jpg".format(_key)
-            _path: str = os.path.join(_input, "image", imageName)
+            # image path
+            _path: str = os.path.join(_input, "image", "{}.jpg".format(_key))
+            # ensure path exists
             if not os.path.exists(_path):
                 raise FileNotFoundError("Cannot find image", _path)
-            elif (_face := Images.obtain_classified_face(_path)) is not None:
-                pixels.append(numpy.asarray(_face))
+            # processing images
+            _images: list = Images.obtain_training_images(_path)
+            for _image in _images:
+                pixels.append(numpy.asarray(_image))
+            for _ in range(len(_images)):
                 targets["gender"].append(
                     numpy.array(0 if value.get_gender() == "male" else 1)
                 )
@@ -110,6 +120,7 @@ class TrainImageModel:
                 numpy.asarray(targets["gender"], numpy.uint16),
                 ImageModel.GENDER_MODEL_WAS_SAVED_TO,
             )
+            del targets["gender"]
         # train age
         if "age" not in ignore:
             cls.__train(
@@ -117,6 +128,7 @@ class TrainImageModel:
                 numpy.asarray(targets["age"], numpy.uint16),
                 ImageModel.AGE_MODEL_WAS_SAVED_TO,
             )
+            del targets["age"]
         # train ocean
         for key in ImageModel.OCEAN:
             if key not in ignore:
