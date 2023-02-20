@@ -133,13 +133,12 @@ class Users:
 
     @staticmethod
     def convert_gender(_gender: int) -> str:
-        return (
-            "male"
-            if _gender == "0.0"
-            else "female"
-            if _gender == "1.0"
-            else Exception("unknown gender")
-        )
+        if _gender == "0.0":
+            return "male"
+        elif _gender == "1.0":
+            return "female"
+        else:
+            raise Exception("unknown gender")
 
     @classmethod
     def from_dict(cls, _data: dict[str, Any]) -> User:
@@ -154,6 +153,7 @@ class Users:
             float(_data["ope"]) if _data["ope"] != "-" else -1,
         )
 
+    @staticmethod
     def load_database(profile_csv_location: str) -> dict[str, User]:
         # database for storing user information, key is user id
         database: dict[str, User] = {}

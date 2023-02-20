@@ -2,18 +2,18 @@ import csv
 import os
 from typing import Any, Optional
 import numpy
-from tensorflow.keras.models import load_model
+from tensorflow.keras.models import load_model  # type: ignore
 from utils.user import User, Users
 from .images import Images
-from .model import ImageModel
+from .model import ImageModels
 
 
 class EvaluateImageModel:
-    GENDER_MODEL = load_model(ImageModel.GENDER_MODEL_WAS_SAVED_TO)
-    AGE_MODEL = load_model(ImageModel.AGE_MODEL_WAS_SAVED_TO)
+    GENDER_MODEL = load_model(ImageModels.GENDER_MODEL_WAS_SAVED_TO)
+    AGE_MODEL = load_model(ImageModels.AGE_MODEL_WAS_SAVED_TO)
     OCEAN_MODELS = {
-        key: load_model(ImageModel.OCEAN_MODEL_WAS_SAVED_TO.format(key))
-        for key in ImageModel.OCEAN
+        key: load_model(ImageModels.OCEAN_MODEL_WAS_SAVED_TO.format(key))
+        for key in ImageModels.OCEAN
     }
 
     # predict the result

@@ -1,7 +1,7 @@
 from os import path as OS_PATH
 from typing import Sequence
 
-import cv2
+import cv2  # type: ignore
 
 
 class Images:
@@ -12,11 +12,11 @@ class Images:
         )
     )
     # image shape
-    SIZE: tuple[int, int] = (256, 256)
+    SIZE: tuple[int, int] = (128, 128)
 
     @staticmethod
     def load(path: str) -> cv2.Mat:
-        return cv2.cvtColor(cv2.imread(path), cv2.COLOR_BGR2GRAY)
+        return cv2.cvtColor(cv2.imread(path), cv2.COLOR_BGR2RGB)
 
     @classmethod
     def resize(cls, img: cv2.Mat) -> cv2.Mat:
@@ -27,7 +27,7 @@ class Images:
         )
 
     @classmethod
-    def find_faces(cls, img) -> Sequence:
+    def find_faces(cls, img: cv2.Mat) -> Sequence:
         return cls.__FACE_CASCADE.detectMultiScale(
             img,
             minNeighbors=5,
@@ -67,6 +67,7 @@ class Images:
 
     @classmethod
     def obtain_training_images(cls, path: str) -> list[cv2.Mat]:
+        """
         theImage = cls.load(path)
         result: list[cv2.Mat] = cls.__get_image_in_all_form(cls.resize(theImage))
         # find faces
@@ -76,5 +77,13 @@ class Images:
             result.extend(
                 cls.__get_image_in_all_form(cls.resize(theImage[y : y + h, x : x + w]))
             )
+        """
+        result: list[cv2.Mat] = []
+        result.append(cls.resize(cls.load(path)))
+        # find faces
+        faces: Sequence = cls.find_faces(result[0])
+        if len(faces) > 0:
+            x, y, w, h = faces[0]
+            result.append(cls.resize(result[0][y : y + h, x : x + w]))
         # return result
         return result

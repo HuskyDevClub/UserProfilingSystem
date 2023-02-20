@@ -1,11 +1,11 @@
 import os
 from typing import Final
-from tensorflow.keras import layers, models, losses
+from tensorflow.keras import layers, models, losses  # type: ignore
 
 from .images import Images
 
 
-class ImageModel:
+class ImageModels:
     GENDER_MODEL_WAS_SAVED_TO: Final[str] = os.path.join(
         os.path.dirname(os.path.abspath(__file__)), "gender_model.h5"
     )
@@ -15,7 +15,7 @@ class ImageModel:
     OCEAN_MODEL_WAS_SAVED_TO: Final[str] = os.path.join(
         os.path.dirname(os.path.abspath(__file__)), "ocean_{}_model.h5"
     )
-    OCEAN: tuple[str] = (
+    OCEAN: tuple[str, ...] = (
         "open",
         "conscientious",
         "extrovert",
@@ -33,37 +33,40 @@ class ImageModel:
         else:
             # build the model
             if _path == cls.GENDER_MODEL_WAS_SAVED_TO:
-                model = ImageModel.get_gender_model()
+                model = ImageModels.get_gender_model()
             elif _path == cls.AGE_MODEL_WAS_SAVED_TO:
-                model = ImageModel.get_age_model()
+                model = ImageModels.get_age_model()
             else:
-                model = ImageModel.get_ocean_model()
+                model = ImageModels.get_ocean_model()
         model.summary()
         return model
 
     # credit:
-    # https://www.tensorflow.org/tutorials/images/cnn
+    # https://www.tensorflow.org/tutorials/images
     @staticmethod
     def __get_model(output: layers.Dense):
         # create model
         model = models.Sequential()
         model.add(
-            layers.Conv2D(
-                32,
-                (3, 3),
-                input_shape=(Images.SIZE[0], Images.SIZE[1], 1),
-                activation="relu",
-            )
+            layers.Rescaling(
+                1.0 / 255, input_shape=(Images.SIZE[0], Images.SIZE[1], 3)
+            ),
         )
-        model.add(layers.MaxPooling2D(2, 2))
-        model.add(layers.Conv2D(64, (3, 3), activation="relu"))
-        model.add(layers.MaxPooling2D(2, 2))
-        model.add(layers.Conv2D(128, (3, 3), activation="relu"))
-        model.add(layers.MaxPooling2D(2, 2))
-        model.add(layers.Conv2D(256, (3, 3), activation="relu"))
-        model.add(layers.MaxPooling2D(2, 2))
+        # Data augmentation
+        model.add(layers.RandomFlip("horizontal"))
+        model.add(layers.RandomRotation(0.2))
+        model.add(layers.RandomRotation(0.2))
+        # hidden layers
+        model.add(layers.Conv2D(16, 3, padding="same", activation="relu"))
+        model.add(layers.MaxPooling2D())
+        model.add(layers.Conv2D(32, 3, padding="same", activation="relu"))
+        model.add(layers.MaxPooling2D())
+        model.add(layers.Conv2D(64, 3, padding="same", activation="relu"))
+        model.add(layers.MaxPooling2D())
+        model.add(layers.Dropout(0.2))
         model.add(layers.Flatten())
-        model.add(layers.Dense(256, activation="relu"))
+        # output layers
+        model.add(layers.Dense(128, activation="relu"))
         model.add(output)
         # compile model
         model.compile(

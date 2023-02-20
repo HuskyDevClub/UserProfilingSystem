@@ -1,20 +1,21 @@
+import gc
 import os
 from typing import Optional
 
-import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt  # type: ignore
 import numpy
-from sklearn.model_selection import train_test_split
-from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping
+from sklearn.model_selection import train_test_split  # type: ignore
+from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping  # type: ignore
 
 from utils.user import User, Users
 
 from .images import Images
-from .model import ImageModel
+from .model import ImageModels
 
 
 class TrainImageModel:
     savefig: bool = False
-    epochs: int = 30
+    epochs: int = 10
 
     @classmethod
     def __train(
@@ -24,7 +25,7 @@ class TrainImageModel:
         model_save_to: str,
     ):
         # load model
-        model = ImageModel.get(model_save_to)
+        model = ImageModels.get(model_save_to)
         # Split dataset for training and test
         x_train, x_test, y_train, y_test = train_test_split(
             pixels, targets, random_state=100
@@ -41,14 +42,14 @@ class TrainImageModel:
             save_freq="epoch",
         )
         # Model Early Stopping Rules
-        early_stopping = EarlyStopping(monitor="val_loss", patience=cls.epochs // 3)
+        early_stopping = EarlyStopping(monitor="val_loss", patience=cls.epochs // 2)
         # Fit the model
         result = model.fit(
             x_train,
             y_train,
             validation_data=(x_test, y_test),
             epochs=cls.epochs,
-            callbacks=[check_pointer],
+            callbacks=[check_pointer, early_stopping],
         )
         # Final evaluation of the model
         scores = model.evaluate(x_test, y_test, verbose=0)
@@ -58,13 +59,15 @@ class TrainImageModel:
             plt.clf()
             plt.plot(result.history["accuracy"], label="accuracy")
             plt.plot(result.history["val_accuracy"], label="val_accuracy")
-            plt.plot(result.history["val_loss"], label="val_loss")
             plt.xlabel("epochs")
             plt.xlabel("Epoch")
             plt.ylabel("Accuracy")
             plt.legend(loc="lower right")
             plt.title("validation loss curve for " + os.path.basename(model_save_to))
             plt.savefig(model_save_to.replace(".h5", ".png"))
+        # clear memory
+        del model
+        gc.collect()
 
     @classmethod
     def train(
@@ -84,8 +87,9 @@ class TrainImageModel:
             "gender": [],
             "age": [],
         }
-        for key in ImageModel.OCEAN:
+        for key in ImageModels.OCEAN:
             targets[key] = []
+        current_index: int = 0
         # load all data
         for _key, value in database.items():
             # image path
@@ -98,17 +102,25 @@ class TrainImageModel:
             for _image in _images:
                 pixels.append(numpy.asarray(_image))
             for _ in range(len(_images)):
-                targets["gender"].append(
-                    numpy.array(0 if value.get_gender() == "male" else 1)
-                )
+                targets["gender"].append(0 if value.get_gender() == "male" else 1)
                 targets["age"].append(value.get_age_group_index())
                 targets["open"].append(round(value.get_open()))
                 targets["conscientious"].append(round(value.get_conscientious()))
                 targets["extrovert"].append(round(value.get_extrovert()))
                 targets["agreeable"].append(round(value.get_agreeable()))
                 targets["neurotic"].append(round(value.get_neurotic()))
-            if _max is not None and len(pixels) >= _max:
+            current_index += 1
+            print(
+                "Image loaded: {0}/{1}".format(current_index, len(database)),
+                end="\r",
+                flush=True,
+            )
+            if _max is not None and current_index >= _max:
                 break
+
+        pixelsNdarray: numpy.ndarray = numpy.asarray(pixels)
+        del pixels
+        gc.collect()
 
         """
         start training
@@ -116,25 +128,25 @@ class TrainImageModel:
         # train gender
         if "gender" not in ignore:
             cls.__train(
-                numpy.asarray(pixels),
+                pixelsNdarray,
                 numpy.asarray(targets["gender"], numpy.uint16),
-                ImageModel.GENDER_MODEL_WAS_SAVED_TO,
+                ImageModels.GENDER_MODEL_WAS_SAVED_TO,
             )
             del targets["gender"]
         # train age
         if "age" not in ignore:
             cls.__train(
-                numpy.asarray(pixels),
+                pixelsNdarray,
                 numpy.asarray(targets["age"], numpy.uint16),
-                ImageModel.AGE_MODEL_WAS_SAVED_TO,
+                ImageModels.AGE_MODEL_WAS_SAVED_TO,
             )
             del targets["age"]
         # train ocean
-        for key in ImageModel.OCEAN:
+        for key in ImageModels.OCEAN:
             if key not in ignore:
                 # train age
                 cls.__train(
-                    numpy.asarray(pixels),
+                    pixelsNdarray,
                     numpy.asarray(targets[key], numpy.uint16),
-                    ImageModel.OCEAN_MODEL_WAS_SAVED_TO.format(key),
+                    ImageModels.OCEAN_MODEL_WAS_SAVED_TO.format(key),
                 )
