@@ -109,7 +109,7 @@ class Users:
 
     @staticmethod
     def convert_age_group(_age: float | int) -> str:
-        _theAge: float = float(_age)
+        _theAge: int = round(float(_age))
         if _theAge <= 24:
             return "xx-24"
         elif _theAge <= 34:
@@ -121,7 +121,7 @@ class Users:
 
     @staticmethod
     def convert_age_group_index(_age: float | int) -> int:
-        _theAge: float = float(_age)
+        _theAge: int = round(float(_age))
         if _theAge <= 24:
             return 0
         elif _theAge <= 34:
@@ -133,13 +133,12 @@ class Users:
 
     @staticmethod
     def convert_gender(_gender: int) -> str:
-        return (
-            "male"
-            if _gender == "0.0"
-            else "female"
-            if _gender == "1.0"
-            else Exception("unknown gender")
-        )
+        if _gender == "0.0":
+            return "male"
+        elif _gender == "1.0":
+            return "female"
+        else:
+            raise Exception("unknown gender")
 
     @classmethod
     def from_dict(cls, _data: dict[str, Any]) -> User:
@@ -154,6 +153,7 @@ class Users:
             float(_data["ope"]) if _data["ope"] != "-" else -1,
         )
 
+    @staticmethod
     def load_database(profile_csv_location: str) -> dict[str, User]:
         # database for storing user information, key is user id
         database: dict[str, User] = {}
@@ -176,3 +176,30 @@ class Users:
                     keys = tuple(_temp)
         # return data
         return database
+
+
+class UserTests:
+    @staticmethod
+    def run() -> None:
+        testUser1: User = User("testId", 24, "male", 1.5, 0.0, 0.0, 5.0, 3.0)
+        assert testUser1.get_id() == "testId"
+        assert testUser1.get_age_group() == "xx-24"
+        assert testUser1.get_extrovert() == 1.5
+        assert testUser1.get_neurotic() == 0.0
+        assert testUser1.get_agreeable() == 0.0
+        assert testUser1.get_conscientious() == 5.0
+        assert testUser1.get_open() == 3.0
+        assert testUser1.get_gender() == "male"
+        testUser2: User = User("testId", 50, "female", 1.5, 0.0, 0.0, 5.0, 3.0)
+        assert testUser2.get_id() == "testId"
+        assert testUser2.get_age_group() == "50-xx"
+        assert testUser2.get_extrovert() == 1.5
+        assert testUser2.get_neurotic() == 0.0
+        assert testUser2.get_agreeable() == 0.0
+        assert testUser2.get_conscientious() == 5.0
+        assert testUser2.get_open() == 3.0
+        assert testUser2.get_gender() == "female"
+        assert Users.convert_age_group(24.0) == "xx-24"
+
+
+UserTests.run()

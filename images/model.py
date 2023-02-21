@@ -1,32 +1,36 @@
 import os
 from typing import Final
-
-from keras.layers import Conv2D, Dense, Dropout, Flatten, Input, MaxPooling2D
-from keras.models import Model
-from tensorflow.keras.layers import Activation, Input
-from tensorflow.keras.models import load_model
-from tensorflow.keras.regularizers import l2
+from tensorflow.keras import layers, models, losses  # type: ignore
 
 from .images import Images
 
 
-class ImageModel:
+class ImageModels:
+    # the folder that all the models will be saved to
+    MODEL_WAS_SAVE_TO_DIR: Final[str] = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)), "models"
+    )
+    if not os.path.exists(MODEL_WAS_SAVE_TO_DIR):
+        os.mkdir(MODEL_WAS_SAVE_TO_DIR)
+    # the path to cnn models
     GENDER_MODEL_WAS_SAVED_TO: Final[str] = os.path.join(
-        os.path.dirname(os.path.abspath(__file__)), "gender_model.h5"
+        MODEL_WAS_SAVE_TO_DIR, "gender_model.h5"
     )
     AGE_MODEL_WAS_SAVED_TO: Final[str] = os.path.join(
-        os.path.dirname(os.path.abspath(__file__)), "age_model.h5"
+        MODEL_WAS_SAVE_TO_DIR, "age_model.h5"
     )
     OCEAN_MODEL_WAS_SAVED_TO: Final[str] = os.path.join(
-        os.path.dirname(os.path.abspath(__file__)), "ocean_{}_model.h5"
+        MODEL_WAS_SAVE_TO_DIR, "ocean_{}_model.h5"
     )
-    OCEAN: tuple[str] = (
+    OCEAN: Final[tuple[str, ...]] = (
         "open",
         "conscientious",
         "extrovert",
         "agreeable",
         "neurotic",
     )
+    GENDER_RANGES: Final[tuple[str, ...]] = ("male", "female")
+    AGE_RANGES: Final[tuple[str, ...]] = ("xx-24", "25-34", "35-49", "50-xx")
 
     # try get model, if model does not exist, then create a new one
     @classmethod
@@ -34,142 +38,73 @@ class ImageModel:
         # load model
         if os.path.exists(_path):
             # if model already exists, the continue to train
-            model = load_model(_path)
+            print("An existing model is found and will be loaded!")
+            model = models.load_model(_path)
         else:
             # build the model
             if _path == cls.GENDER_MODEL_WAS_SAVED_TO:
-                model = ImageModel.get_gender_model()
+                model = ImageModels.get_gender_model()
             elif _path == cls.AGE_MODEL_WAS_SAVED_TO:
-                model = ImageModel.get_age_model()
+                model = ImageModels.get_age_model()
             else:
-                model = ImageModel.get_ocean_model()
+                model = ImageModels.get_ocean_model()
         model.summary()
         return model
 
     # credit:
-    # https://medium.com/@skillcate/gender-detection-model-using-cnn-a-complete-guide-279706e94fdb
+    # https://www.tensorflow.org/tutorials/images
     @staticmethod
-    def get_gender_model():
+    def __get_model(output: layers.Dense):
         # create model
-        _input = Input(shape=(Images.SIZE[0], Images.SIZE[1], 1))
-        conv1 = Conv2D(
-            32, (3, 3), padding="same", strides=(1, 1), kernel_regularizer=l2(0.001)
-        )(_input)
-        conv1 = Dropout(0.1)(conv1)
-        conv1 = Activation("relu")(conv1)
-        pool1 = MaxPooling2D(pool_size=(2, 2))(conv1)
-        conv2 = Conv2D(
-            64, (3, 3), padding="same", strides=(1, 1), kernel_regularizer=l2(0.001)
-        )(pool1)
-        conv2 = Dropout(0.1)(conv2)
-        conv2 = Activation("relu")(conv2)
-        pool2 = MaxPooling2D(pool_size=(2, 2))(conv2)
-        conv3 = Conv2D(
-            128, (3, 3), padding="same", strides=(1, 1), kernel_regularizer=l2(0.001)
-        )(pool2)
-        conv3 = Dropout(0.1)(conv3)
-        conv3 = Activation("relu")(conv3)
-        pool3 = MaxPooling2D(pool_size=(2, 2))(conv3)
-        conv4 = Conv2D(
-            256, (3, 3), padding="same", strides=(1, 1), kernel_regularizer=l2(0.001)
-        )(pool3)
-        conv4 = Dropout(0.1)(conv4)
-        conv4 = Activation("relu")(conv4)
-        pool4 = MaxPooling2D(pool_size=(2, 2))(conv4)
-        flatten = Flatten()(pool4)
-        dense_1 = Dense(128, activation="relu")(flatten)
-        drop_1 = Dropout(0.2)(dense_1)
-        output = Dense(2, activation="sigmoid")(drop_1)
-        # Model compile
-        model = Model(inputs=_input, outputs=output)
+        model = models.Sequential()
+        # input layer
+        """
+        model.add(
+            layers.RandomFlip(
+                "horizontal", input_shape=(Images.SIZE[0], Images.SIZE[1], 3)
+            )
+        )
+        model.add(layers.RandomRotation(0.1))
+        model.add(layers.RandomRotation(0.1))
+        model.add(layers.Rescaling(1.0 / 255))
+        """
+        # hidden layer 1
+        model.add(layers.Conv2D(32, 3, input_shape=(Images.SIZE[0], Images.SIZE[1], 3), padding="same", activation="relu"))
+        model.add(layers.MaxPooling2D())
+        # hidden layer 2
+        model.add(layers.Conv2D(64, 3, padding="same", activation="relu"))
+        model.add(layers.MaxPooling2D())
+        # hidden layer 3
+        model.add(layers.Conv2D(128, 3, padding="same", activation="relu"))
+        model.add(layers.MaxPooling2D())
+        model.add(layers.Dropout(0.1))
+        # hidden layer 5
+        model.add(layers.Conv2D(256, 3, padding="same", activation="relu"))
+        model.add(layers.MaxPooling2D())
+        model.add(layers.Dropout(0.1))
+        # flatten
+        model.add(layers.Flatten())
+        # output layers
+        model.add(layers.Dense(128, activation="relu"))
+        model.add(output)
+        # compile model
         model.compile(
             optimizer="adam",
-            loss=["sparse_categorical_crossentropy"],
+            loss=losses.SparseCategoricalCrossentropy(),
             metrics=["accuracy"],
         )
-
         return model
 
-    @staticmethod
-    def get_age_model():
-        # create model
-        _input = Input(shape=(Images.SIZE[0], Images.SIZE[1], 1))
-        conv1 = Conv2D(
-            32, (3, 3), padding="same", strides=(1, 1), kernel_regularizer=l2(0.001)
-        )(_input)
-        conv1 = Dropout(0.1)(conv1)
-        conv1 = Activation("relu")(conv1)
-        pool1 = MaxPooling2D(pool_size=(2, 2))(conv1)
-        conv2 = Conv2D(
-            64, (3, 3), padding="same", strides=(1, 1), kernel_regularizer=l2(0.001)
-        )(pool1)
-        conv2 = Dropout(0.1)(conv2)
-        conv2 = Activation("relu")(conv2)
-        pool2 = MaxPooling2D(pool_size=(2, 2))(conv2)
-        conv3 = Conv2D(
-            128, (3, 3), padding="same", strides=(1, 1), kernel_regularizer=l2(0.001)
-        )(pool2)
-        conv3 = Dropout(0.1)(conv3)
-        conv3 = Activation("relu")(conv3)
-        pool3 = MaxPooling2D(pool_size=(2, 2))(conv3)
-        conv4 = Conv2D(
-            256, (3, 3), padding="same", strides=(1, 1), kernel_regularizer=l2(0.001)
-        )(pool3)
-        conv4 = Dropout(0.1)(conv4)
-        conv4 = Activation("relu")(conv4)
-        pool4 = MaxPooling2D(pool_size=(2, 2))(conv4)
-        flatten = Flatten()(pool4)
-        dense_1 = Dense(128, activation="relu")(flatten)
-        drop_1 = Dropout(0.2)(dense_1)
-        output = Dense(4, activation="softmax")(drop_1)
-        # Model compile
-        model = Model(inputs=_input, outputs=output)
-        model.compile(
-            optimizer="adam",
-            loss=["sparse_categorical_crossentropy"],
-            metrics=["accuracy"],
+    @classmethod
+    def get_gender_model(cls):
+        return cls.__get_model(
+            layers.Dense(len(cls.GENDER_RANGES), activation="sigmoid")
         )
 
-        return model
+    @classmethod
+    def get_age_model(cls):
+        return cls.__get_model(layers.Dense(len(cls.AGE_RANGES), activation="softmax"))
 
-    @staticmethod
-    def get_ocean_model():
-        # create model
-        _input = Input(shape=(Images.SIZE[0], Images.SIZE[1], 1))
-        conv1 = Conv2D(
-            32, (3, 3), padding="same", strides=(1, 1), kernel_regularizer=l2(0.001)
-        )(_input)
-        conv1 = Dropout(0.1)(conv1)
-        conv1 = Activation("relu")(conv1)
-        pool1 = MaxPooling2D(pool_size=(2, 2))(conv1)
-        conv2 = Conv2D(
-            64, (3, 3), padding="same", strides=(1, 1), kernel_regularizer=l2(0.001)
-        )(pool1)
-        conv2 = Dropout(0.1)(conv2)
-        conv2 = Activation("relu")(conv2)
-        pool2 = MaxPooling2D(pool_size=(2, 2))(conv2)
-        conv3 = Conv2D(
-            128, (3, 3), padding="same", strides=(1, 1), kernel_regularizer=l2(0.001)
-        )(pool2)
-        conv3 = Dropout(0.1)(conv3)
-        conv3 = Activation("relu")(conv3)
-        pool3 = MaxPooling2D(pool_size=(2, 2))(conv3)
-        conv4 = Conv2D(
-            256, (3, 3), padding="same", strides=(1, 1), kernel_regularizer=l2(0.001)
-        )(pool3)
-        conv4 = Dropout(0.1)(conv4)
-        conv4 = Activation("relu")(conv4)
-        pool4 = MaxPooling2D(pool_size=(2, 2))(conv4)
-        flatten = Flatten()(pool4)
-        dense_1 = Dense(128, activation="relu")(flatten)
-        drop_1 = Dropout(0.2)(dense_1)
-        output = Dense(6, activation="softmax")(drop_1)
-        # Model compile
-        model = Model(inputs=_input, outputs=output)
-        model.compile(
-            optimizer="adam",
-            loss=["sparse_categorical_crossentropy"],
-            metrics=["accuracy"],
-        )
-
-        return model
+    @classmethod
+    def get_ocean_model(cls):
+        return cls.__get_model(layers.Dense(11, activation="softmax"))

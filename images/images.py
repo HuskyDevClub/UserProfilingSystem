@@ -1,7 +1,7 @@
 from os import path as OS_PATH
 from typing import Sequence
 
-import cv2
+import cv2  # type: ignore
 
 
 class Images:
@@ -16,7 +16,7 @@ class Images:
 
     @staticmethod
     def load(path: str) -> cv2.Mat:
-        return cv2.cvtColor(cv2.imread(path), cv2.COLOR_BGR2GRAY)
+        return cv2.cvtColor(cv2.imread(path), cv2.COLOR_BGR2RGB)
 
     @classmethod
     def resize(cls, img: cv2.Mat) -> cv2.Mat:
@@ -27,7 +27,7 @@ class Images:
         )
 
     @classmethod
-    def find_faces(cls, img) -> Sequence:
+    def find_faces(cls, img: cv2.Mat) -> Sequence:
         return cls.__FACE_CASCADE.detectMultiScale(
             img,
             minNeighbors=5,
@@ -49,3 +49,32 @@ class Images:
         else:
             x, y, w, h = faces[0]
             return cls.resize(_img[y : y + h, x : x + w])
+
+    @staticmethod
+    def __get_image_rotations(img: cv2.Mat) -> list[cv2.Mat]:
+        return [
+            img,
+            # cv2.rotate(img, cv2.ROTATE_90_CLOCKWISE),
+            # cv2.rotate(img, cv2.ROTATE_180),
+            # cv2.rotate(img, cv2.ROTATE_90_COUNTERCLOCKWISE),
+        ]
+
+    @classmethod
+    def __get_image_in_all_form(cls, img: cv2.Mat) -> list[cv2.Mat]:
+        return cls.__get_image_rotations(img) + cls.__get_image_rotations(
+            cv2.flip(img, 0)
+        )
+
+    @classmethod
+    def obtain_training_images(cls, path: str) -> list[cv2.Mat]:
+        theImage = cls.load(path)
+        result: list[cv2.Mat] = cls.__get_image_in_all_form(cls.resize(theImage))
+        # find faces
+        faces: Sequence = cls.find_faces(theImage)
+        if len(faces) > 0:
+            x, y, w, h = faces[0]
+            result.extend(
+                cls.__get_image_in_all_form(cls.resize(theImage[y : y + h, x : x + w]))
+            )
+        # return result
+        return result

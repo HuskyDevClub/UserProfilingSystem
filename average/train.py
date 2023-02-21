@@ -62,7 +62,7 @@ class TrainAverageModel:
         # generate result
         result: dict = {
             "gender": "male" if total_males >= total_females else "female",
-            "age_group": max(age_groups_statistic, key=age_groups_statistic.get),
+            "age_group": max(age_groups_statistic, key=age_groups_statistic.get),  # type: ignore
         }
         for key in personalities_score_total:
             result[key] = round(personalities_score_total[key] / len(database), 8)

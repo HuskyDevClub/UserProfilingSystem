@@ -8,5 +8,6 @@
         "sklearn",
         "spamreader",
         "userid"
-    ]
+    ],
+    "python.analysis.typeCheckingMode": "basic"
 }
