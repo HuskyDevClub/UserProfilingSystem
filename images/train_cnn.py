@@ -13,7 +13,7 @@ from .images import Images
 from .model import ImageModels
 
 
-class TrainImageModel:
+class TrainCnnImageModel:
     savefig: bool = False
     epochs: int = 10
 
@@ -42,7 +42,9 @@ class TrainImageModel:
             save_freq="epoch",
         )
         # Model Early Stopping Rules
-        early_stopping = EarlyStopping(monitor="val_loss", patience=cls.epochs // 2)
+        early_stopping = EarlyStopping(
+            monitor="val_loss", patience=max(cls.epochs // 3, min(5, cls.epochs))
+        )
         # Fit the model
         result = model.fit(
             x_train,
@@ -104,11 +106,11 @@ class TrainImageModel:
             for _ in range(len(_images)):
                 targets["gender"].append(0 if value.get_gender() == "male" else 1)
                 targets["age"].append(value.get_age_group_index())
-                targets["open"].append(round(value.get_open()))
-                targets["conscientious"].append(round(value.get_conscientious()))
-                targets["extrovert"].append(round(value.get_extrovert()))
-                targets["agreeable"].append(round(value.get_agreeable()))
-                targets["neurotic"].append(round(value.get_neurotic()))
+                targets["open"].append(round(value.get_open() * 2))
+                targets["conscientious"].append(round(value.get_conscientious() * 2))
+                targets["extrovert"].append(round(value.get_extrovert() * 2))
+                targets["agreeable"].append(round(value.get_agreeable() * 2))
+                targets["neurotic"].append(round(value.get_neurotic() * 2))
             current_index += 1
             print(
                 "Image loaded: {0}/{1}".format(current_index, len(database)),
@@ -142,11 +144,12 @@ class TrainImageModel:
             )
             del targets["age"]
         # train ocean
-        for key in ImageModels.OCEAN:
-            if key not in ignore:
-                # train age
-                cls.__train(
-                    pixelsNdarray,
-                    numpy.asarray(targets[key], numpy.uint16),
-                    ImageModels.OCEAN_MODEL_WAS_SAVED_TO.format(key),
-                )
+        if "ocean" not in ignore:
+            for key in ImageModels.OCEAN:
+                if key not in ignore:
+                    # train age
+                    cls.__train(
+                        pixelsNdarray,
+                        numpy.asarray(targets[key], numpy.uint16),
+                        ImageModels.OCEAN_MODEL_WAS_SAVED_TO.format(key),
+                    )

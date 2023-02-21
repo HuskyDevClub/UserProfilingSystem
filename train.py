@@ -1,8 +1,9 @@
 import argparse
 
 # from average.train import TrainAverageModel
-# from images.train import TrainImageModel
-from images.train_dt import TrainImageDecisionTree
+from images.train_cnn import TrainCnnImageModel
+
+# from images.train_dt import TrainImageDecisionTree
 
 # using argparse to parse the argument from command line
 parser: argparse.ArgumentParser = argparse.ArgumentParser()
@@ -14,12 +15,12 @@ args: argparse.Namespace = parser.parse_args()
 
 # obtain input directory from command line
 inputDir: str = args.i
-"""
+
 if args.e is not None:
-    TrainImageModel.epochs = int(args.e)
+    TrainCnnImageModel.epochs = int(args.e)
 if args.s is not None:
-    TrainImageModel.savefig = bool(args.s)
-"""
+    TrainCnnImageModel.savefig = bool(args.s)
+
 # TrainAverageModel.train(inputDir)
-# TrainImageModel.train(inputDir, [], int(args.x) if args.x is not None else None)
-TrainImageDecisionTree.train(inputDir, [], int(args.x) if args.x is not None else None)
+TrainCnnImageModel.train(inputDir, [], int(args.x) if args.x is not None else None)
+# TrainImageDecisionTree.train(inputDir, int(args.x) if args.x is not None else None)

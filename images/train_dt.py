@@ -12,13 +12,10 @@ from .model import ImageModels
 
 
 class TrainImageDecisionTree:
+    SAVED_TO: str = os.path.join(ImageModels.MODEL_WAS_SAVE_TO_DIR, "dt")
+
     @classmethod
-    def train(
-        cls,
-        _input: str,
-        ignore: list[str] = [],
-        _max: Optional[int] = None,
-    ):
+    def train(cls, _input: str, _max: Optional[int] = None) -> None:
         # database for storing user information, key is user id
         database: dict[str, User] = Users.load_database(
             os.path.join(_input, "profile", "profile.csv")
@@ -72,27 +69,22 @@ class TrainImageDecisionTree:
         """
         # train ocean
         for key in ImageModels.OCEAN:
-            ####################   MAIN PROGRAM ######################
-
             # Convert the pandas dataframe into a TensorFlow dataset
-            input_df: pandas.DataFrame = pandas.DataFrame(
-                data=inputs, dtype=numpy.int64
-            )
+            input_df: pandas.DataFrame = pandas.DataFrame(data=inputs, dtype=numpy.int8)
             input_df[key] = targets[key]
-
             # Reading input data
             split_point = len(targets[key]) * 4 // 5
             train_df = input_df.iloc[:split_point]
             test_df = input_df.iloc[split_point:]
-
             # Convert the pandas dataframe into a TensorFlow dataset
             train_ds = tfdf.keras.pd_dataframe_to_tf_dataset(train_df, label=key)
             test_ds = tfdf.keras.pd_dataframe_to_tf_dataset(test_df, label=key)
-
-            # Train the model
+            # Generate the model
             model = tfdf.keras.RandomForestModel()
-
+            # Train the model
             model.fit(train_ds)
-            score = model.evaluate(test_ds)
-            print("score:")
-            print(score)
+            model.compile(metrics=["accuracy"])
+            # Evaluate the model
+            model.evaluate(test_ds, return_dict=True)
+            # Save the model
+            model.save(os.path.join(cls.SAVED_TO, key))
