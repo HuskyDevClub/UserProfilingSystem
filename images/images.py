@@ -12,7 +12,7 @@ class Images:
         )
     )
     # image shape
-    SIZE: tuple[int, int] = (256, 256)
+    SIZE: tuple[int, int] = (128, 128)
 
     @staticmethod
     def load(path: str) -> cv2.Mat:
@@ -67,7 +67,6 @@ class Images:
 
     @classmethod
     def obtain_training_images(cls, path: str) -> list[cv2.Mat]:
-        """
         theImage = cls.load(path)
         result: list[cv2.Mat] = cls.__get_image_in_all_form(cls.resize(theImage))
         # find faces
@@ -77,13 +76,5 @@ class Images:
             result.extend(
                 cls.__get_image_in_all_form(cls.resize(theImage[y : y + h, x : x + w]))
             )
-        """
-        result: list[cv2.Mat] = []
-        result.append(cls.resize(cls.load(path)))
-        # find faces
-        faces: Sequence = cls.find_faces(result[0])
-        if len(faces) > 0:
-            x, y, w, h = faces[0]
-            result.append(cls.resize(result[0][y : y + h, x : x + w]))
         # return result
         return result
