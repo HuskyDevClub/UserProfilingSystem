@@ -34,7 +34,7 @@ class TrainCnnImageModel:
         # Model Checkpoint
         check_pointer = ModelCheckpoint(
             model_save_to,
-            monitor="loss",
+            monitor="val_loss",
             verbose=1,
             save_best_only=True,
             save_weights_only=False,
@@ -100,7 +100,7 @@ class TrainCnnImageModel:
             if not os.path.exists(_path):
                 raise FileNotFoundError("Cannot find image", _path)
             # processing images
-            _images: list = Images.obtain_training_images(_path)
+            _images: list = [Images.resize(Images.load(_path))]
             for _image in _images:
                 pixels.append(numpy.asarray(_image))
             for _ in range(len(_images)):

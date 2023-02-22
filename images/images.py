@@ -12,7 +12,7 @@ class Images:
         )
     )
     # image shape
-    SIZE: tuple[int, int] = (128, 128)
+    SIZE: tuple[int, int] = (256, 256)
 
     @staticmethod
     def load(path: str) -> cv2.Mat:

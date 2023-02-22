@@ -55,6 +55,13 @@ class User:
     def get_open(self) -> float | int:
         return self.__open
 
+    def update_ocean_score(self, results: dict[str, float | int]) -> None:
+        self.__extrovert = results["extrovert"]
+        self.__neurotic = results["neurotic"]
+        self.__agreeable = results["agreeable"]
+        self.__conscientious = results["conscientious"]
+        self.__open = results["open"]
+
     def to_dict(self) -> dict[str, Any]:
         return {
             "id": self.__id,

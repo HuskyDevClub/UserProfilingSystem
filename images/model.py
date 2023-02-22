@@ -58,30 +58,27 @@ class ImageModels:
         # create model
         model = models.Sequential()
         # input layer
-        """
         model.add(
             layers.RandomFlip(
                 "horizontal", input_shape=(Images.SIZE[0], Images.SIZE[1], 3)
             )
         )
-        model.add(layers.RandomRotation(0.1))
-        model.add(layers.RandomRotation(0.1))
+        model.add(layers.RandomRotation(0.2))
         model.add(layers.Rescaling(1.0 / 255))
-        """
         # hidden layer 1
-        model.add(layers.Conv2D(32, 3, input_shape=(Images.SIZE[0], Images.SIZE[1], 3), padding="same", activation="relu"))
-        model.add(layers.MaxPooling2D())
+        model.add(layers.Conv2D(32, (3, 3), padding="same", activation="relu"))
+        model.add(layers.MaxPooling2D(3, 3))
         # hidden layer 2
-        model.add(layers.Conv2D(64, 3, padding="same", activation="relu"))
-        model.add(layers.MaxPooling2D())
+        model.add(layers.Conv2D(64, (3, 3), padding="same", activation="relu"))
+        model.add(layers.MaxPooling2D(3, 3))
         # hidden layer 3
-        model.add(layers.Conv2D(128, 3, padding="same", activation="relu"))
-        model.add(layers.MaxPooling2D())
-        model.add(layers.Dropout(0.1))
-        # hidden layer 5
-        model.add(layers.Conv2D(256, 3, padding="same", activation="relu"))
-        model.add(layers.MaxPooling2D())
-        model.add(layers.Dropout(0.1))
+        model.add(layers.Conv2D(128, (3, 3), padding="same", activation="relu"))
+        model.add(layers.MaxPooling2D(3, 3))
+        model.add(layers.Dropout(0.05))
+        # hidden layer 4
+        model.add(layers.Conv2D(256, (3, 3), padding="same", activation="relu"))
+        model.add(layers.MaxPooling2D(3, 3))
+        model.add(layers.Dropout(0.05))
         # flatten
         model.add(layers.Flatten())
         # output layers
@@ -89,7 +86,7 @@ class ImageModels:
         model.add(output)
         # compile model
         model.compile(
-            optimizer="adam",
+            optimizer="sgd",
             loss=losses.SparseCategoricalCrossentropy(),
             metrics=["accuracy"],
         )

@@ -1,5 +1,6 @@
 import argparse
 import os
+import shutil
 
 from average.evaluate import EvaluateAverageModel
 from images.evaluate import EvaluateImageModel
@@ -15,8 +16,9 @@ inputDir: str = args.i
 outputDir: str = args.o
 
 # check to see if out folder folder exists
-if not os.path.exists(outputDir):
-    os.mkdir(outputDir)
+if os.path.exists(outputDir):
+    shutil.rmtree(outputDir)
+os.mkdir(outputDir)
 
 # EvaluateAverageModel.process(inputDir, outputDir)
 EvaluateImageModel.process(inputDir, outputDir)

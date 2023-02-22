@@ -20,6 +20,14 @@ class EvaluateImageModel:
     }
     """
 
+    OCEAN_AVERAGE = {
+        "agreeable": 3.58390421,
+        "conscientious": 3.44561684,
+        "extrovert": 3.48685789,
+        "neurotic": 2.73242421,
+        "open": 3.90869053,
+    }
+
     @staticmethod
     def __get_gender_model():
         return models.load_model(ImageModels.GENDER_MODEL_WAS_SAVED_TO)
@@ -54,6 +62,14 @@ class EvaluateImageModel:
             gc.collect()
         results: list[User] = []
         for i in range(len(_user_ids)):
+            ocean_scores: dict[str, float] = {}
+            for key in ImageModels.OCEAN:
+                predicted_value: float = (
+                    int(numpy.argmax(OCEAN_predictions[key][i])) / 2
+                )
+                ocean_scores[key] = round(
+                    predicted_value + (cls.OCEAN_AVERAGE[key] - predicted_value) / 10, 2
+                )
             results.append(
                 User(
                     _user_ids[i],
@@ -61,15 +77,14 @@ class EvaluateImageModel:
                         ImageModels.AGE_RANGES[numpy.argmax(age_predictions[i])]
                     ),
                     ImageModels.GENDER_RANGES[numpy.argmax(gender_predictions[i])],
-                    round(int(numpy.argmax(OCEAN_predictions["extrovert"][i])) / 2, 1),
-                    round(int(numpy.argmax(OCEAN_predictions["neurotic"][i])) / 2, 1),
-                    round(int(numpy.argmax(OCEAN_predictions["agreeable"][i])) / 2, 1),
-                    round(
-                        int(numpy.argmax(OCEAN_predictions["conscientious"][i])) / 2, 1
-                    ),
-                    round(int(numpy.argmax(OCEAN_predictions["open"][i])) / 2, 1),
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
                 )
             )
+            results[i].update_ocean_score(ocean_scores)
             assert (
                 results[i].get_age_group()
                 == ImageModels.AGE_RANGES[numpy.argmax(age_predictions[i])]
