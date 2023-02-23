@@ -3,6 +3,8 @@ import os
 import xml.etree.cElementTree as ET
 from typing import Any, Optional
 
+import pandas  # type: ignore
+
 
 class User:
     def __init__(
@@ -54,6 +56,20 @@ class User:
 
     def get_open(self) -> float | int:
         return self.__open
+
+    def get_ocean(self, key: str) -> float | int:
+        if key == "extrovert":
+            return self.__extrovert
+        elif key == "neurotic":
+            return self.__neurotic
+        elif key == "agreeable":
+            return self.__agreeable
+        elif key == "conscientious":
+            return self.__conscientious
+        elif key == "open":
+            return self.__open
+        else:
+            raise Exception("unknown ocean type")
 
     def update_ocean_score(self, results: dict[str, float | int]) -> None:
         self.__extrovert = results["extrovert"]
@@ -184,16 +200,20 @@ class Users:
         # return data
         return database
 
+    @staticmethod
+    def get_profile(profile_csv_location: str) -> pandas.DataFrame:
+        return pandas.read_csv(profile_csv_location)
+
 
 class UserTests:
     @staticmethod
     def run() -> None:
-        testUser1: User = User("testId", 24, "male", 1.5, 0.0, 0.0, 5.0, 3.0)
+        testUser1: User = User("testId", 24, "male", 1.5, 0.0, 1.0, 5.0, 3.0)
         assert testUser1.get_id() == "testId"
         assert testUser1.get_age_group() == "xx-24"
         assert testUser1.get_extrovert() == 1.5
         assert testUser1.get_neurotic() == 0.0
-        assert testUser1.get_agreeable() == 0.0
+        assert testUser1.get_agreeable() == 1.0
         assert testUser1.get_conscientious() == 5.0
         assert testUser1.get_open() == 3.0
         assert testUser1.get_gender() == "male"

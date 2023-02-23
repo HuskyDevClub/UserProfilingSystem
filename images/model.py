@@ -1,6 +1,8 @@
 import os
 from typing import Final
-from tensorflow.keras import layers, models, losses  # type: ignore
+
+from keras.initializers import RandomNormal  # type: ignore
+from tensorflow.keras import layers, losses, models  # type: ignore
 
 from .images import Images
 
@@ -12,16 +14,7 @@ class ImageModels:
     )
     if not os.path.exists(MODEL_WAS_SAVE_TO_DIR):
         os.mkdir(MODEL_WAS_SAVE_TO_DIR)
-    # the path to cnn models
-    GENDER_MODEL_WAS_SAVED_TO: Final[str] = os.path.join(
-        MODEL_WAS_SAVE_TO_DIR, "gender_model.h5"
-    )
-    AGE_MODEL_WAS_SAVED_TO: Final[str] = os.path.join(
-        MODEL_WAS_SAVE_TO_DIR, "age_model.h5"
-    )
-    OCEAN_MODEL_WAS_SAVED_TO: Final[str] = os.path.join(
-        MODEL_WAS_SAVE_TO_DIR, "ocean_{}_model.h5"
-    )
+    # attributes
     OCEAN: Final[tuple[str, ...]] = (
         "open",
         "conscientious",
@@ -29,27 +22,21 @@ class ImageModels:
         "agreeable",
         "neurotic",
     )
+    ALL_TARGET_ATTRIBUTES: Final[tuple[str, ...]] = tuple(
+        ["age", "gender"] + list(OCEAN)
+    )
+    # the path to cnn models
+    MODEL_WAS_SAVED_TO: Final[dict[str, str]] = {
+        "gender": os.path.join(MODEL_WAS_SAVE_TO_DIR, "gender_model.h5"),
+        "age": os.path.join(MODEL_WAS_SAVE_TO_DIR, "age_model.h5"),
+    }
+    for _ocean_attribute in OCEAN:
+        MODEL_WAS_SAVED_TO[_ocean_attribute] = os.path.join(
+            MODEL_WAS_SAVE_TO_DIR, "{}_model.h5".format(_ocean_attribute)
+        )
+    # classes
     GENDER_RANGES: Final[tuple[str, ...]] = ("male", "female")
     AGE_RANGES: Final[tuple[str, ...]] = ("xx-24", "25-34", "35-49", "50-xx")
-
-    # try get model, if model does not exist, then create a new one
-    @classmethod
-    def get(cls, _path: str):
-        # load model
-        if os.path.exists(_path):
-            # if model already exists, the continue to train
-            print("An existing model is found and will be loaded!")
-            model = models.load_model(_path)
-        else:
-            # build the model
-            if _path == cls.GENDER_MODEL_WAS_SAVED_TO:
-                model = ImageModels.get_gender_model()
-            elif _path == cls.AGE_MODEL_WAS_SAVED_TO:
-                model = ImageModels.get_age_model()
-            else:
-                model = ImageModels.get_ocean_model()
-        model.summary()
-        return model
 
     # credit:
     # https://www.tensorflow.org/tutorials/images
@@ -64,21 +51,78 @@ class ImageModels:
             )
         )
         model.add(layers.RandomRotation(0.2))
+        model.add(layers.RandomZoom(0.1))
         model.add(layers.Rescaling(1.0 / 255))
         # hidden layer 1
-        model.add(layers.Conv2D(32, (3, 3), padding="same", activation="relu"))
-        model.add(layers.MaxPooling2D(3, 3))
+        model.add(
+            layers.Conv2D(
+                64,
+                (3, 3),
+                kernel_initializer=RandomNormal(mean=0.0, stddev=0.05),
+                bias_initializer=RandomNormal(mean=0.0, stddev=0.05),
+                activation="relu",
+            )
+        )
+        model.add(layers.MaxPooling2D())
         # hidden layer 2
-        model.add(layers.Conv2D(64, (3, 3), padding="same", activation="relu"))
-        model.add(layers.MaxPooling2D(3, 3))
+        model.add(
+            layers.Conv2D(
+                64,
+                (3, 3),
+                kernel_initializer=RandomNormal(mean=0.0, stddev=0.05),
+                bias_initializer=RandomNormal(mean=0.0, stddev=0.05),
+                activation="relu",
+            )
+        )
+        model.add(layers.MaxPooling2D(2, 2))
         # hidden layer 3
-        model.add(layers.Conv2D(128, (3, 3), padding="same", activation="relu"))
-        model.add(layers.MaxPooling2D(3, 3))
-        model.add(layers.Dropout(0.05))
+        model.add(
+            layers.Conv2D(
+                128,
+                (3, 3),
+                kernel_initializer=RandomNormal(mean=0.0, stddev=0.05),
+                bias_initializer=RandomNormal(mean=0.0, stddev=0.05),
+                activation="relu",
+            )
+        )
+        model.add(layers.MaxPooling2D(2, 2))
+        model.add(layers.Dropout(0.2))
         # hidden layer 4
-        model.add(layers.Conv2D(256, (3, 3), padding="same", activation="relu"))
-        model.add(layers.MaxPooling2D(3, 3))
-        model.add(layers.Dropout(0.05))
+        model.add(
+            layers.Conv2D(
+                128,
+                (3, 3),
+                kernel_initializer=RandomNormal(mean=0.0, stddev=0.05),
+                bias_initializer=RandomNormal(mean=0.0, stddev=0.05),
+                activation="relu",
+            )
+        )
+        model.add(layers.MaxPooling2D(2, 2))
+        model.add(layers.Dropout(0.2))
+        # hidden layer 5
+        model.add(
+            layers.Conv2D(
+                256,
+                (3, 3),
+                kernel_initializer=RandomNormal(mean=0.0, stddev=0.05),
+                bias_initializer=RandomNormal(mean=0.0, stddev=0.05),
+                activation="relu",
+            )
+        )
+        model.add(layers.MaxPooling2D(2, 2))
+        model.add(layers.Dropout(0.2))
+        # hidden layer 6
+        model.add(
+            layers.Conv2D(
+                256,
+                (3, 3),
+                kernel_initializer=RandomNormal(mean=0.0, stddev=0.05),
+                bias_initializer=RandomNormal(mean=0.0, stddev=0.05),
+                activation="relu",
+            )
+        )
+        model.add(layers.MaxPooling2D(2, 2))
+        model.add(layers.Dropout(0.2))
         # flatten
         model.add(layers.Flatten())
         # output layers
@@ -86,22 +130,26 @@ class ImageModels:
         model.add(output)
         # compile model
         model.compile(
-            optimizer="sgd",
+            optimizer="adam",
             loss=losses.SparseCategoricalCrossentropy(),
             metrics=["accuracy"],
         )
         return model
 
     @classmethod
-    def get_gender_model(cls):
+    def get_model(cls, classNum: int):
         return cls.__get_model(
-            layers.Dense(len(cls.GENDER_RANGES), activation="sigmoid")
+            layers.Dense(classNum, activation="sigmoid" if classNum <= 2 else "softmax")
         )
 
     @classmethod
-    def get_age_model(cls):
-        return cls.__get_model(layers.Dense(len(cls.AGE_RANGES), activation="softmax"))
-
-    @classmethod
-    def get_ocean_model(cls):
-        return cls.__get_model(layers.Dense(11, activation="softmax"))
+    def try_load_model(cls, category: str, classNum: int):
+        if os.path.exists(cls.MODEL_WAS_SAVED_TO[category]):
+            # if model already exists, the continue to train
+            print("An existing model is found and will be loaded!")
+            model = models.load_model(cls.MODEL_WAS_SAVED_TO[category])
+        else:
+            # generate a new model
+            model = cls.get_model(classNum)
+        model.summary()
+        return model

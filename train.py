@@ -22,5 +22,5 @@ if args.s is not None:
     TrainCnnImageModel.savefig = bool(args.s)
 
 # TrainAverageModel.train(inputDir)
-TrainCnnImageModel.train(inputDir, [], int(args.x) if args.x is not None else None)
+TrainCnnImageModel.train(inputDir)
 # TrainImageDecisionTree.train(inputDir, int(args.x) if args.x is not None else None)

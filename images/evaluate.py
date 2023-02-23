@@ -30,15 +30,15 @@ class EvaluateImageModel:
 
     @staticmethod
     def __get_gender_model():
-        return models.load_model(ImageModels.GENDER_MODEL_WAS_SAVED_TO)
+        return models.load_model(ImageModels.MODEL_WAS_SAVED_TO["gender"])
 
     @staticmethod
     def __get_age_model():
-        return models.load_model(ImageModels.AGE_MODEL_WAS_SAVED_TO)
+        return models.load_model(ImageModels.MODEL_WAS_SAVED_TO["age"])
 
     @staticmethod
     def __get_ocean_model(_type: str):
-        return models.load_model(ImageModels.OCEAN_MODEL_WAS_SAVED_TO.format(_type))
+        return models.load_model(ImageModels.MODEL_WAS_SAVED_TO[_type])
 
     # predict the result
     @classmethod
