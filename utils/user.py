@@ -10,7 +10,7 @@ class User:
     def __init__(
         self,
         _id: str,
-        _age: int,
+        _age: float | int,
         _gender: str,
         _extrovert: float | int,
         _neurotic: float | int,
@@ -19,7 +19,7 @@ class User:
         _open: float | int,
     ) -> None:
         self.__id: str = _id
-        self.__age: int = _age
+        self.__age: int = int(_age)
         self.__gender: str = _gender
         self.__extrovert: float | int = _extrovert
         self.__neurotic: float | int = _neurotic
@@ -35,6 +35,9 @@ class User:
 
     def get_age_group(self) -> str:
         return Users.convert_age_group(self.__age)
+
+    def get_binary_age_group(self) -> str:
+        return "xx-24" if self.__age <= 24 else "25-34"
 
     def get_age_group_index(self) -> int:
         return Users.convert_age_group_index(self.__age)

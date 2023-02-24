@@ -50,83 +50,34 @@ class ImageModels:
                 "horizontal", input_shape=(Images.SIZE[0], Images.SIZE[1], 3)
             )
         )
-        model.add(layers.RandomRotation(0.2))
-        model.add(layers.RandomZoom(0.1))
+        # normalize
+        model.add(layers.RandomRotation(0.1))
         model.add(layers.Rescaling(1.0 / 255))
         # hidden layer 1
-        model.add(
-            layers.Conv2D(
-                64,
-                (3, 3),
-                kernel_initializer=RandomNormal(mean=0.0, stddev=0.05),
-                bias_initializer=RandomNormal(mean=0.0, stddev=0.05),
-                activation="relu",
-            )
-        )
+        model.add(layers.Conv2D(64, (3, 3), activation="relu"))
         model.add(layers.MaxPooling2D())
         # hidden layer 2
-        model.add(
-            layers.Conv2D(
-                64,
-                (3, 3),
-                kernel_initializer=RandomNormal(mean=0.0, stddev=0.05),
-                bias_initializer=RandomNormal(mean=0.0, stddev=0.05),
-                activation="relu",
-            )
-        )
-        model.add(layers.MaxPooling2D(2, 2))
+        model.add(layers.Conv2D(64, (3, 3), activation="relu"))
+        model.add(layers.MaxPooling2D())
         # hidden layer 3
-        model.add(
-            layers.Conv2D(
-                128,
-                (3, 3),
-                kernel_initializer=RandomNormal(mean=0.0, stddev=0.05),
-                bias_initializer=RandomNormal(mean=0.0, stddev=0.05),
-                activation="relu",
-            )
-        )
-        model.add(layers.MaxPooling2D(2, 2))
-        model.add(layers.Dropout(0.2))
+        model.add(layers.Conv2D(128, (3, 3), activation="relu"))
+        model.add(layers.MaxPooling2D())
         # hidden layer 4
-        model.add(
-            layers.Conv2D(
-                128,
-                (3, 3),
-                kernel_initializer=RandomNormal(mean=0.0, stddev=0.05),
-                bias_initializer=RandomNormal(mean=0.0, stddev=0.05),
-                activation="relu",
-            )
-        )
-        model.add(layers.MaxPooling2D(2, 2))
-        model.add(layers.Dropout(0.2))
+        model.add(layers.Conv2D(128, (3, 3), activation="relu"))
+        model.add(layers.MaxPooling2D())
         # hidden layer 5
-        model.add(
-            layers.Conv2D(
-                256,
-                (3, 3),
-                kernel_initializer=RandomNormal(mean=0.0, stddev=0.05),
-                bias_initializer=RandomNormal(mean=0.0, stddev=0.05),
-                activation="relu",
-            )
-        )
-        model.add(layers.MaxPooling2D(2, 2))
-        model.add(layers.Dropout(0.2))
-        # hidden layer 6
-        model.add(
-            layers.Conv2D(
-                256,
-                (3, 3),
-                kernel_initializer=RandomNormal(mean=0.0, stddev=0.05),
-                bias_initializer=RandomNormal(mean=0.0, stddev=0.05),
-                activation="relu",
-            )
-        )
-        model.add(layers.MaxPooling2D(2, 2))
-        model.add(layers.Dropout(0.2))
+        model.add(layers.Conv2D(256, (3, 3), activation="relu"))
+        model.add(layers.MaxPooling2D())
         # flatten
         model.add(layers.Flatten())
-        # output layers
+        # dropout layers
+        model.add(layers.Dense(256, activation="relu"))
+        model.add(layers.Dropout(0.05))
         model.add(layers.Dense(128, activation="relu"))
+        model.add(layers.Dropout(0.05))
+        model.add(layers.Dense(64, activation="relu"))
+        model.add(layers.Dropout(0.1))
+        # output layers
         model.add(output)
         # compile model
         model.compile(
@@ -144,6 +95,7 @@ class ImageModels:
 
     @classmethod
     def try_load_model(cls, category: str, classNum: int):
+        print("**************************************************")
         if os.path.exists(cls.MODEL_WAS_SAVED_TO[category]):
             # if model already exists, the continue to train
             print("An existing model is found and will be loaded!")
@@ -151,5 +103,7 @@ class ImageModels:
         else:
             # generate a new model
             model = cls.get_model(classNum)
+            print("An new model is created!")
+        print("**************************************************")
         model.summary()
         return model

@@ -1,5 +1,5 @@
 from os import path as OS_PATH
-from typing import Sequence
+from typing import Optional, Sequence
 
 import cv2  # type: ignore
 
@@ -16,7 +16,7 @@ class Images:
 
     @staticmethod
     def load(path: str) -> cv2.Mat:
-        return cv2.cvtColor(cv2.imread(path), cv2.COLOR_BGR2RGB)
+        return cv2.imread(path)
 
     @classmethod
     def resize(cls, img: cv2.Mat) -> cv2.Mat:
@@ -49,6 +49,30 @@ class Images:
         else:
             x, y, w, h = faces[0]
             return cls.resize(_img[y : y + h, x : x + w])
+
+    @classmethod
+    def try_obtain_classified_face(cls, path: str) -> Optional[cv2.Mat]:
+        _img: cv2.Mat = cls.load(path)
+        # find faces
+        faces = cls.find_faces(_img)
+        if len(faces) >= 1:
+            x, y, w, h = faces[0]
+            return cls.resize(_img[y : y + h, x : x + w])
+        else:
+            return None
+
+    @classmethod
+    def obtain_greatest_square(cls, path: str) -> cv2.Mat:
+        _img: cv2.Mat = cls.load(path)
+        # find faces
+        _height: int = _img.shape[0]
+        _width: int = _img.shape[1]
+        if _height == _width:
+            return cls.resize(_img)
+        elif _height > _width:
+            return cls.resize(_img[:_width, :_width])
+        else:
+            return cls.resize(_img[:_height, (_width - _height) // 2 : _height])
 
     @staticmethod
     def __get_image_rotations(img: cv2.Mat) -> list[cv2.Mat]:

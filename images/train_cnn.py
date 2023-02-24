@@ -1,5 +1,6 @@
 import gc
 import os
+from typing import Sequence
 
 import matplotlib.pyplot as plt  # type: ignore
 from tensorflow.data import AUTOTUNE  # type: ignore
@@ -16,32 +17,26 @@ class TrainCnnImageModel:
     epochs: int = 10
 
     @classmethod
-    def __train(cls, _input: str, _category: str):
-        # load training data
-        train_ds = image_dataset_from_directory(
-            os.path.join(_input, Classifier.CACHE_DIR, _category),
-            validation_split=0.4,
-            subset="training",
-            seed=123,
+    def __train(cls, _input: str, _category: str, mode: str):
+        # load data
+        full_dataset = image_dataset_from_directory(
+            os.path.join(_input, Classifier.CACHE_DIR, mode, _category),
             image_size=Images.SIZE,
         )
-        # load validation data
-        val_ds = image_dataset_from_directory(
-            os.path.join(_input, Classifier.CACHE_DIR, _category),
-            validation_split=0.4,
-            subset="validation",
-            seed=123,
-            image_size=Images.SIZE,
-        )
+        DATASET_SIZE: int = full_dataset.cardinality().numpy()
+        val_size = int(0.2 * DATASET_SIZE)
+        train_size = DATASET_SIZE - val_size
+        # get training data
+        train_dataset = full_dataset.take(train_size)
+        val_dataset = full_dataset.skip(train_size)
         # load model
-        _model = ImageModels.try_load_model(_category, len(train_ds.class_names))
+        _model = ImageModels.try_load_model(_category, len(full_dataset.class_names))
         # prefetch data
-        train_ds = train_ds.cache().prefetch(buffer_size=AUTOTUNE)
-        val_ds = val_ds.cache().prefetch(buffer_size=AUTOTUNE)
+        full_dataset.cache().prefetch(buffer_size=AUTOTUNE)
         # Model Checkpoint
         check_pointer = ModelCheckpoint(
             ImageModels.MODEL_WAS_SAVED_TO[_category],
-            monitor="val_loss",
+            monitor="val_accuracy",
             verbose=1,
             save_best_only=True,
             save_weights_only=False,
@@ -50,12 +45,12 @@ class TrainCnnImageModel:
         )
         # Model Early Stopping Rules
         early_stopping = EarlyStopping(
-            monitor="val_loss", patience=max(cls.epochs // 3, min(5, cls.epochs))
+            monitor="accuracy", patience=max(cls.epochs // 3, min(5, cls.epochs))
         )
         # Fit the model
         result = _model.fit(
-            train_ds,
-            validation_data=val_ds,
+            train_dataset,
+            validation_data=val_dataset,
             epochs=cls.epochs,
             callbacks=[check_pointer, early_stopping],
         )
@@ -80,11 +75,11 @@ class TrainCnnImageModel:
         gc.collect()
 
     @classmethod
-    def train(cls, _input: str, ignore: list[str] = []):
+    def train(cls, _input: str, ignore: Sequence[str] = [], mode: str = "default"):
         """
         start training
         """
         # train age
         for key in ImageModels.ALL_TARGET_ATTRIBUTES:
             if key not in ignore:
-                cls.__train(_input, key)
+                cls.__train(_input, key, mode)
