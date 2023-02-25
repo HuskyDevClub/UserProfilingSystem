@@ -3,7 +3,7 @@ import shutil
 import time
 from typing import Optional
 
-import cv2
+import cv2  # type: ignore
 
 from utils.user import User, Users
 

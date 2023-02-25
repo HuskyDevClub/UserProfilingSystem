@@ -18,4 +18,5 @@ if args.e is not None:
 if args.s is not None:
     TrainCnnImageModel.savefig = bool(args.s)
 
-TrainCnnImageModel.train(inputDir, ["age", *ImageModels.OCEAN], "greatest_square")
+TrainCnnImageModel.train(inputDir, ["gender", *ImageModels.OCEAN], "ideal")
+TrainCnnImageModel.train(inputDir, ["gender", *ImageModels.OCEAN], "greatest_square")

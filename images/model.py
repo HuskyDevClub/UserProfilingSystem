@@ -1,7 +1,6 @@
 import os
 from typing import Final
 
-from keras.initializers import RandomNormal  # type: ignore
 from tensorflow.keras import layers, losses, models  # type: ignore
 
 from .images import Images
@@ -25,15 +24,6 @@ class ImageModels:
     ALL_TARGET_ATTRIBUTES: Final[tuple[str, ...]] = tuple(
         ["age", "gender"] + list(OCEAN)
     )
-    # the path to cnn models
-    MODEL_WAS_SAVED_TO: Final[dict[str, str]] = {
-        "gender": os.path.join(MODEL_WAS_SAVE_TO_DIR, "gender_model.h5"),
-        "age": os.path.join(MODEL_WAS_SAVE_TO_DIR, "age_model.h5"),
-    }
-    for _ocean_attribute in OCEAN:
-        MODEL_WAS_SAVED_TO[_ocean_attribute] = os.path.join(
-            MODEL_WAS_SAVE_TO_DIR, "{}_model.h5".format(_ocean_attribute)
-        )
     # classes
     GENDER_RANGES: Final[tuple[str, ...]] = ("male", "female")
     AGE_RANGES: Final[tuple[str, ...]] = ("xx-24", "25-34", "35-49", "50-xx")
@@ -88,22 +78,27 @@ class ImageModels:
         return model
 
     @classmethod
-    def get_model(cls, classNum: int):
-        return cls.__get_model(
-            layers.Dense(classNum, activation="sigmoid" if classNum <= 2 else "softmax")
-        )
-
-    @classmethod
-    def try_load_model(cls, category: str, classNum: int):
+    def get_model(
+        cls, category: str, mode: str, classNum: int, assumeExist: bool = False
+    ):
         print("**************************************************")
-        if os.path.exists(cls.MODEL_WAS_SAVED_TO[category]):
+        _path: str = os.path.join(
+            cls.MODEL_WAS_SAVE_TO_DIR, "{0}_{1}_model.h5".format(category, mode)
+        )
+        if os.path.exists(_path):
             # if model already exists, the continue to train
-            print("An existing model is found and will be loaded!")
-            model = models.load_model(cls.MODEL_WAS_SAVED_TO[category])
-        else:
+            model = models.load_model(_path)
+            print("An existing model is found and loaded!")
+        elif not assumeExist:
             # generate a new model
-            model = cls.get_model(classNum)
+            model = cls.__get_model(
+                layers.Dense(
+                    classNum, activation="sigmoid" if classNum <= 2 else "softmax"
+                )
+            )
             print("An new model is created!")
+        else:
+            raise FileNotFoundError("Cannot find model at path:", _path)
         print("**************************************************")
         model.summary()
-        return model
+        return model, _path

@@ -15,6 +15,7 @@ from .model import ImageModels
 class TrainCnnImageModel:
     savefig: bool = False
     epochs: int = 10
+    monitor: str = "val_accuracy"
 
     @classmethod
     def __train(cls, _input: str, _category: str, mode: str):
@@ -30,13 +31,15 @@ class TrainCnnImageModel:
         train_dataset = full_dataset.take(train_size)
         val_dataset = full_dataset.skip(train_size)
         # load model
-        _model = ImageModels.try_load_model(_category, len(full_dataset.class_names))
+        _model, _path = ImageModels.get_model(
+            _category, mode, len(full_dataset.class_names)
+        )
         # prefetch data
         full_dataset.cache().prefetch(buffer_size=AUTOTUNE)
         # Model Checkpoint
         check_pointer = ModelCheckpoint(
-            ImageModels.MODEL_WAS_SAVED_TO[_category],
-            monitor="val_accuracy",
+            _path,
+            monitor=cls.monitor,
             verbose=1,
             save_best_only=True,
             save_weights_only=False,
@@ -45,7 +48,7 @@ class TrainCnnImageModel:
         )
         # Model Early Stopping Rules
         early_stopping = EarlyStopping(
-            monitor="accuracy", patience=max(cls.epochs // 3, min(5, cls.epochs))
+            monitor=cls.monitor, patience=max(cls.epochs // 3, min(5, cls.epochs))
         )
         # Fit the model
         result = _model.fit(
@@ -63,13 +66,8 @@ class TrainCnnImageModel:
             plt.xlabel("Epoch")
             plt.ylabel("Accuracy")
             plt.legend(loc="lower right")
-            plt.title(
-                "validation loss curve for "
-                + os.path.basename(ImageModels.MODEL_WAS_SAVED_TO[_category])
-            )
-            plt.savefig(
-                ImageModels.MODEL_WAS_SAVED_TO[_category].replace(".h5", ".png")
-            )
+            plt.title("validation loss curve for {0}_{1}".format(_category, mode))
+            plt.savefig(_path.replace(".h5", ".png"))
         # clear memory
         del _model
         gc.collect()

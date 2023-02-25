@@ -28,18 +28,6 @@ class EvaluateImageModel:
         "open": 3.90869053,
     }
 
-    @staticmethod
-    def __get_gender_model():
-        return models.load_model(ImageModels.MODEL_WAS_SAVED_TO["gender"])
-
-    @staticmethod
-    def __get_age_model():
-        return models.load_model(ImageModels.MODEL_WAS_SAVED_TO["age"])
-
-    @staticmethod
-    def __get_ocean_model(_type: str):
-        return models.load_model(ImageModels.MODEL_WAS_SAVED_TO[_type])
-
     # predict the result
     @classmethod
     def predict(cls, _input: str, _user_ids: list[str]) -> list[User]:
@@ -53,12 +41,18 @@ class EvaluateImageModel:
                 for _id in _user_ids
             ]
         )
-        gender_predictions: numpy.ndarray = cls.__get_gender_model().predict(_in)
-        age_predictions: numpy.ndarray = cls.__get_age_model().predict(_in)
+        gender_predictions: numpy.ndarray = ImageModels.get_model(
+            "gender", "greatest_square", 2, True
+        )[0].predict(_in)
+        age_predictions: numpy.ndarray = ImageModels.get_model(
+            "age", "greatest_square", 2, True
+        )[0].predict(_in)
         gc.collect()
         OCEAN_predictions: dict[str, numpy.ndarray] = {}
         for key in ImageModels.OCEAN:
-            OCEAN_predictions[key] = cls.__get_ocean_model(key).predict(_in)
+            OCEAN_predictions[key] = ImageModels.get_model(
+                key, "greatest_square", 2, True
+            )[0].predict(_in)
             gc.collect()
         results: list[User] = []
         for i in range(len(_user_ids)):
