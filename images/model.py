@@ -25,8 +25,10 @@ class ImageModels:
         ["age", "gender"] + list(OCEAN)
     )
     # classes
-    GENDER_RANGES: Final[tuple[str, ...]] = ("male", "female")
-    AGE_RANGES: Final[tuple[str, ...]] = ("xx-24", "25-34", "35-49", "50-xx")
+    GENDER_RANGES: Final[tuple[str, ...]] = tuple(sorted(["male", "female"]))
+    AGE_RANGES: Final[tuple[str, ...]] = tuple(
+        sorted(["xx-24", "25-34", "35-49", "50-xx"])
+    )
 
     # credit:
     # https://www.tensorflow.org/tutorials/images

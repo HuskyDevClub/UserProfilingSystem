@@ -93,6 +93,20 @@ class User:
             "open": self.__open,
         }
 
+    def get_data_frame(self) -> pandas.DataFrame:
+        return pandas.DataFrame(
+            {
+                "userid": [self.get_id()],
+                "age": [self.get_age_group()],
+                "gender": [self.get_gender()],
+                "ope": [self.get_open()],
+                "con": [self.get_conscientious()],
+                "ext": [self.get_extrovert()],
+                "agr": [self.get_agreeable()],
+                "neu": [self.get_neurotic()],
+            }
+        )
+
     def save(self, output_dir: str) -> None:
         _data: dict[str, Any] = self.to_dict()
         for key in _data:

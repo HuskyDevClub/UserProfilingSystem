@@ -62,9 +62,22 @@ class Images:
             return None
 
     @classmethod
-    def obtain_greatest_square(cls, path: str) -> cv2.Mat:
+    def obtain_images_for_prediction(
+        cls, path: str
+    ) -> tuple[cv2.Mat, Optional[cv2.Mat]]:
         _img: cv2.Mat = cls.load(path)
         # find faces
+        faces = cls.find_faces(_img)
+        if len(faces) >= 1:
+            x, y, w, h = faces[0]
+            return cls.__obtain_greatest_square(_img), cls.resize(
+                _img[y : y + h, x : x + w]
+            )
+        else:
+            return cls.__obtain_greatest_square(_img), None
+
+    @classmethod
+    def __obtain_greatest_square(cls, _img: cv2.Mat) -> cv2.Mat:
         _height: int = _img.shape[0]
         _width: int = _img.shape[1]
         if _height == _width:
@@ -73,6 +86,10 @@ class Images:
             return cls.resize(_img[:_width, :_width])
         else:
             return cls.resize(_img[:_height, (_width - _height) // 2 : _height])
+
+    @classmethod
+    def obtain_greatest_square(cls, path: str) -> cv2.Mat:
+        return cls.__obtain_greatest_square(cls.load(path))
 
     @staticmethod
     def __get_image_rotations(img: cv2.Mat) -> list[cv2.Mat]:
