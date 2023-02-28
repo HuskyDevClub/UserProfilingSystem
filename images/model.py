@@ -33,7 +33,11 @@ class ImageModels:
     # credit:
     # https://www.tensorflow.org/tutorials/images
     @staticmethod
-    def __get_model(output: layers.Dense):
+    def __get_model(
+        output: layers.Dense,
+        _loss=losses.SparseCategoricalCrossentropy(),
+        metrics: list[str] = ["accuracy"],
+    ):
         # create model
         model = models.Sequential()
         # input layer
@@ -72,11 +76,7 @@ class ImageModels:
         # output layers
         model.add(output)
         # compile model
-        model.compile(
-            optimizer="adam",
-            loss=losses.SparseCategoricalCrossentropy(),
-            metrics=["accuracy"],
-        )
+        model.compile(optimizer="adam", loss=_loss, metrics=metrics)
         return model
 
     @classmethod
@@ -93,9 +93,13 @@ class ImageModels:
             print("An existing model is found and loaded!")
         elif not assumeExist:
             # generate a new model
-            model = cls.__get_model(
-                layers.Dense(
-                    classNum, activation="sigmoid" if classNum <= 2 else "softmax"
+            model = (
+                cls.__get_model(layers.Dense(classNum), "mse", ["mse"])
+                if classNum <= 1
+                else cls.__get_model(
+                    layers.Dense(
+                        classNum, activation="sigmoid" if classNum <= 2 else "softmax"
+                    )
                 )
             )
             print("An new model is created!")
