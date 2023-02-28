@@ -3,12 +3,14 @@ import os
 import xml.etree.cElementTree as ET
 from typing import Any, Optional
 
+import pandas  # type: ignore
+
 
 class User:
     def __init__(
         self,
         _id: str,
-        _age: int,
+        _age: float | int,
         _gender: str,
         _extrovert: float | int,
         _neurotic: float | int,
@@ -17,7 +19,7 @@ class User:
         _open: float | int,
     ) -> None:
         self.__id: str = _id
-        self.__age: int = _age
+        self.__age: int = int(_age)
         self.__gender: str = _gender
         self.__extrovert: float | int = _extrovert
         self.__neurotic: float | int = _neurotic
@@ -33,6 +35,9 @@ class User:
 
     def get_age_group(self) -> str:
         return Users.convert_age_group(self.__age)
+
+    def get_binary_age_group(self) -> str:
+        return "xx-24" if self.__age <= 24 else "25-34"
 
     def get_age_group_index(self) -> int:
         return Users.convert_age_group_index(self.__age)
@@ -55,6 +60,20 @@ class User:
     def get_open(self) -> float | int:
         return self.__open
 
+    def get_ocean(self, key: str) -> float | int:
+        if key == "extrovert":
+            return self.__extrovert
+        elif key == "neurotic":
+            return self.__neurotic
+        elif key == "agreeable":
+            return self.__agreeable
+        elif key == "conscientious":
+            return self.__conscientious
+        elif key == "open":
+            return self.__open
+        else:
+            raise Exception("unknown ocean type")
+
     def update_ocean_score(self, results: dict[str, float | int]) -> None:
         self.__extrovert = results["extrovert"]
         self.__neurotic = results["neurotic"]
@@ -73,6 +92,20 @@ class User:
             "conscientious": self.__conscientious,
             "open": self.__open,
         }
+
+    def get_data_frame(self) -> pandas.DataFrame:
+        return pandas.DataFrame(
+            {
+                "userid": [self.get_id()],
+                "age": [self.get_age_group()],
+                "gender": [self.get_gender()],
+                "ope": [self.get_open()],
+                "con": [self.get_conscientious()],
+                "ext": [self.get_extrovert()],
+                "agr": [self.get_agreeable()],
+                "neu": [self.get_neurotic()],
+            }
+        )
 
     def save(self, output_dir: str) -> None:
         _data: dict[str, Any] = self.to_dict()
@@ -184,16 +217,20 @@ class Users:
         # return data
         return database
 
+    @staticmethod
+    def get_profile(profile_csv_location: str) -> pandas.DataFrame:
+        return pandas.read_csv(profile_csv_location)
+
 
 class UserTests:
     @staticmethod
     def run() -> None:
-        testUser1: User = User("testId", 24, "male", 1.5, 0.0, 0.0, 5.0, 3.0)
+        testUser1: User = User("testId", 24, "male", 1.5, 0.0, 1.0, 5.0, 3.0)
         assert testUser1.get_id() == "testId"
         assert testUser1.get_age_group() == "xx-24"
         assert testUser1.get_extrovert() == 1.5
         assert testUser1.get_neurotic() == 0.0
-        assert testUser1.get_agreeable() == 0.0
+        assert testUser1.get_agreeable() == 1.0
         assert testUser1.get_conscientious() == 5.0
         assert testUser1.get_open() == 3.0
         assert testUser1.get_gender() == "male"

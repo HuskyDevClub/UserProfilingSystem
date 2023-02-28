@@ -1,14 +1,13 @@
 import gc
 import os
-from typing import Optional
+from typing import Sequence
 
 import matplotlib.pyplot as plt  # type: ignore
-import numpy
-from sklearn.model_selection import train_test_split  # type: ignore
-from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping  # type: ignore
+from tensorflow.data import AUTOTUNE  # type: ignore
+from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint  # type: ignore
+from tensorflow.keras.utils import image_dataset_from_directory  # type: ignore
 
-from utils.user import User, Users
-
+from .classifier import Classifier
 from .images import Images
 from .model import ImageModels
 
@@ -16,25 +15,31 @@ from .model import ImageModels
 class TrainCnnImageModel:
     savefig: bool = False
     epochs: int = 10
+    monitor: str = "val_accuracy"
 
     @classmethod
-    def __train(
-        cls,
-        pixels: numpy.ndarray,
-        targets: numpy.ndarray,
-        model_save_to: str,
-    ):
-        # load model
-        model = ImageModels.get(model_save_to)
-        # Split dataset for training and test
-        x_train, x_test, y_train, y_test = train_test_split(
-            pixels, targets, random_state=100
+    def __train(cls, _input: str, _category: str, mode: str):
+        # load data
+        full_dataset = image_dataset_from_directory(
+            os.path.join(_input, Classifier.CACHE_DIR, mode, _category),
+            image_size=Images.SIZE,
         )
-        print("Start training! The trained model will be saved to:", model_save_to)
+        DATASET_SIZE: int = full_dataset.cardinality().numpy()
+        val_size = int(0.2 * DATASET_SIZE)
+        train_size = DATASET_SIZE - val_size
+        # get training data
+        train_dataset = full_dataset.take(train_size)
+        val_dataset = full_dataset.skip(train_size)
+        # load model
+        _model, _path = ImageModels.get_model(
+            _category, mode, len(full_dataset.class_names)
+        )
+        # prefetch data
+        full_dataset.cache().prefetch(buffer_size=AUTOTUNE)
         # Model Checkpoint
         check_pointer = ModelCheckpoint(
-            model_save_to,
-            monitor="val_loss",
+            _path,
+            monitor=cls.monitor,
             verbose=1,
             save_best_only=True,
             save_weights_only=False,
@@ -43,19 +48,15 @@ class TrainCnnImageModel:
         )
         # Model Early Stopping Rules
         early_stopping = EarlyStopping(
-            monitor="val_loss", patience=max(cls.epochs // 3, min(5, cls.epochs))
+            monitor=cls.monitor, patience=max(cls.epochs // 3, min(5, cls.epochs))
         )
         # Fit the model
-        result = model.fit(
-            x_train,
-            y_train,
-            validation_data=(x_test, y_test),
+        result = _model.fit(
+            train_dataset,
+            validation_data=val_dataset,
             epochs=cls.epochs,
             callbacks=[check_pointer, early_stopping],
         )
-        # Final evaluation of the model
-        scores = model.evaluate(x_test, y_test, verbose=0)
-        print("Baseline Error: %.2f%%" % (100 - scores[1] * 100))
         # show validation loss curve
         if cls.savefig is True:
             plt.clf()
@@ -65,91 +66,18 @@ class TrainCnnImageModel:
             plt.xlabel("Epoch")
             plt.ylabel("Accuracy")
             plt.legend(loc="lower right")
-            plt.title("validation loss curve for " + os.path.basename(model_save_to))
-            plt.savefig(model_save_to.replace(".h5", ".png"))
+            plt.title("validation loss curve for {0}_{1}".format(_category, mode))
+            plt.savefig(_path.replace(".h5", ".png"))
         # clear memory
-        del model
+        del _model
         gc.collect()
 
     @classmethod
-    def train(
-        cls,
-        _input: str,
-        ignore: list[str] = [],
-        _max: Optional[int] = None,
-    ):
-        # database for storing user information, key is user id
-        database: dict[str, User] = Users.load_database(
-            os.path.join(_input, "profile", "profile.csv")
-        )
-        # Load dataset
-        pixels: list = []
-        # init dictionary
-        targets: dict[str, list[int]] = {
-            "gender": [],
-            "age": [],
-        }
-        for key in ImageModels.OCEAN:
-            targets[key] = []
-        current_index: int = 0
-        # load all data
-        for _key, value in database.items():
-            # image path
-            _path: str = os.path.join(_input, "image", "{}.jpg".format(_key))
-            # ensure path exists
-            if not os.path.exists(_path):
-                raise FileNotFoundError("Cannot find image", _path)
-            # processing images
-            _images: list = [Images.resize(Images.load(_path))]
-            for _image in _images:
-                pixels.append(numpy.asarray(_image))
-            for _ in range(len(_images)):
-                targets["gender"].append(0 if value.get_gender() == "male" else 1)
-                targets["age"].append(value.get_age_group_index())
-                targets["open"].append(round(value.get_open() * 2))
-                targets["conscientious"].append(round(value.get_conscientious() * 2))
-                targets["extrovert"].append(round(value.get_extrovert() * 2))
-                targets["agreeable"].append(round(value.get_agreeable() * 2))
-                targets["neurotic"].append(round(value.get_neurotic() * 2))
-            current_index += 1
-            print(
-                "Image loaded: {0}/{1}".format(current_index, len(database)),
-                end="\r",
-                flush=True,
-            )
-            if _max is not None and current_index >= _max:
-                break
-
-        pixelsNdarray: numpy.ndarray = numpy.asarray(pixels)
-        del pixels
-        gc.collect()
-
+    def train(cls, _input: str, ignore: Sequence[str] = [], mode: str = "default"):
         """
         start training
         """
-        # train gender
-        if "gender" not in ignore:
-            cls.__train(
-                pixelsNdarray,
-                numpy.asarray(targets["gender"], numpy.uint16),
-                ImageModels.GENDER_MODEL_WAS_SAVED_TO,
-            )
-            del targets["gender"]
         # train age
-        if "age" not in ignore:
-            cls.__train(
-                pixelsNdarray,
-                numpy.asarray(targets["age"], numpy.uint16),
-                ImageModels.AGE_MODEL_WAS_SAVED_TO,
-            )
-            del targets["age"]
-        # train ocean
-        if "ocean" not in ignore:
-            for key in ImageModels.OCEAN:
-                if key not in ignore:
-                    # train age
-                    cls.__train(
-                        pixelsNdarray,
-                        numpy.asarray(targets[key], numpy.uint16),
-                        ImageModels.OCEAN_MODEL_WAS_SAVED_TO.format(key),
-                    )
+        for key in ImageModels.ALL_TARGET_ATTRIBUTES:
+            if key not in ignore:
+                cls.__train(_input, key, mode)

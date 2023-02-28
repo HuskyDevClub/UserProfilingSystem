@@ -1,9 +1,6 @@
 import argparse
-
-# from average.train import TrainAverageModel
 from images.train_cnn import TrainCnnImageModel
-
-# from images.train_dt import TrainImageDecisionTree
+from images.model import ImageModels
 
 # using argparse to parse the argument from command line
 parser: argparse.ArgumentParser = argparse.ArgumentParser()
@@ -21,6 +18,5 @@ if args.e is not None:
 if args.s is not None:
     TrainCnnImageModel.savefig = bool(args.s)
 
-# TrainAverageModel.train(inputDir)
-TrainCnnImageModel.train(inputDir, [], int(args.x) if args.x is not None else None)
-# TrainImageDecisionTree.train(inputDir, int(args.x) if args.x is not None else None)
+TrainCnnImageModel.train(inputDir, ["gender", *ImageModels.OCEAN], "ideal")
+TrainCnnImageModel.train(inputDir, ["gender", *ImageModels.OCEAN], "greatest_square")
