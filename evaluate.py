@@ -2,7 +2,7 @@ import argparse
 import os
 import shutil
 
-#from average.evaluate import EvaluateAverageModel
+# from average.evaluate import EvaluateAverageModel
 from images.evaluate import EvaluateImageModel
 
 # using argparse to parse the argument from command line

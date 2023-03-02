@@ -53,7 +53,7 @@ class Classifier:
             # classify by age
             cls.__copy_image_to(
                 current_image_path,
-                os.path.join(_out_dir, "age", _user.get_age_group()),
+                os.path.join(_out_dir, "age", _user.get_binary_age_group()),
                 mode,
             )
             # classify by gender
