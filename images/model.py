@@ -101,3 +101,10 @@ class ImageModels:
         print("**************************************************")
         model.summary()
         return model, _path
+
+    @classmethod
+    def try_load_model(cls, category: str, mode: str):
+        _path: str = os.path.join(
+            cls.MODEL_WAS_SAVE_TO_DIR, "{0}_{1}_model.h5".format(category, mode)
+        )
+        return models.load_model(_path) if os.path.exists(_path) else None

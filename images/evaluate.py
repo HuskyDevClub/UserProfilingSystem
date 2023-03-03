@@ -31,10 +31,13 @@ class EvaluateImageModel:
     @staticmethod
     def __start_predicting(
         category: str, idealIn: numpy.ndarray, greatestSquareIn: numpy.ndarray
-    ):
-        ideal_predictions: numpy.ndarray = ImageModels.get_model(
-            category, "ideal", 2, True
-        )[0].predict(idealIn)
+    ) -> tuple[numpy.ndarray, numpy.ndarray]:
+        ideal_model = ImageModels.try_load_model(category, "ideal")
+        ideal_predictions: numpy.ndarray = (
+            ideal_model.predict(idealIn)
+            if ideal_model is not None
+            else numpy.asarray([])
+        )
         greatest_square_predictions: numpy.ndarray = ImageModels.get_model(
             category, "greatest_square", 2, True
         )[0].predict(greatestSquareIn)
@@ -82,9 +85,8 @@ class EvaluateImageModel:
                 _prob[key] = predictions[key + "_greatest_square"][i]
             if userId == user_has_ideal_image[currentUserIdealImageIndex]:
                 for key in ImageModels.ALL_TARGET_ATTRIBUTES:
-                    _prob[key] += predictions[key + "_ideal"][
-                        currentUserIdealImageIndex
-                    ]
+                    if len(ideal_predictions := predictions[key + "_ideal"]) > 0:
+                        _prob[key] = ideal_predictions[currentUserIdealImageIndex]
                 currentUserIdealImageIndex += 1
             results.append(
                 User(
