@@ -2,7 +2,7 @@ import gc
 import os
 
 import numpy
-import pandas
+import pandas  # type: ignore
 
 # from images.train_dt import TrainImageDecisionTree
 from utils.user import User, Users
@@ -27,6 +27,12 @@ class EvaluateImageModel:
         "neurotic": 2.73242421,
         "open": 3.90869053,
     }
+
+    @staticmethod
+    def __age_round(age_index: float) -> int:
+        age_index = round(age_index, 1)
+        ceiled_result: int = int(age_index)
+        return ceiled_result + 1 if age_index > ceiled_result + 0.75 else ceiled_result
 
     @staticmethod
     def __start_predicting(
@@ -86,20 +92,26 @@ class EvaluateImageModel:
             if userId == user_has_ideal_image[currentUserIdealImageIndex]:
                 for key in ImageModels.ALL_TARGET_ATTRIBUTES:
                     if len(ideal_predictions := predictions[key + "_ideal"]) > 0:
-                        _prob[key] = ideal_predictions[currentUserIdealImageIndex]
+                        if key == "gender":
+                            _prob[key] = ideal_predictions[currentUserIdealImageIndex]
+                        else:
+                            _prob[key] = (
+                                _prob[key]
+                                + ideal_predictions[currentUserIdealImageIndex]
+                            ) / 2
                 currentUserIdealImageIndex += 1
             results.append(
                 User(
                     userId,
                     Users.convert_to_age(
-                        ImageModels.AGE_RANGES[numpy.argmax(_prob["age"])]
+                        ImageModels.AGE_RANGES[cls.__age_round(float(_prob["age"]))]
                     ),
                     ImageModels.GENDER_RANGES[numpy.argmax(_prob["gender"])],
-                    round(int(numpy.argmax(_prob["extrovert"])) / 2, 2) + 1,
-                    round(int(numpy.argmax(_prob["neurotic"])) / 2, 2) + 1,
-                    round(int(numpy.argmax(_prob["agreeable"])) / 2, 2) + 1,
-                    round(int(numpy.argmax(_prob["conscientious"])) / 2, 2) + 1,
-                    round(int(numpy.argmax(_prob["open"])) / 2, 2) + 1,
+                    round(float(_prob["extrovert"]) / 2, 3),
+                    round(float(_prob["neurotic"]) / 2, 3),
+                    round(float(_prob["agreeable"]) / 2, 3),
+                    round(float(_prob["conscientious"]) / 2, 3),
+                    round(float(_prob["open"]) / 2, 3),
                 )
             )
         assert currentUserIdealImageIndex == len(user_has_ideal_image)
@@ -107,7 +119,7 @@ class EvaluateImageModel:
 
     # predict the result
     @classmethod
-    def process(cls, _input: str, _output: str, _o_type: str = "xml") -> None:
+    def process(cls, _input: str, _output: str, _o_type: str) -> None:
         # database for storing user information, key is user id
         database: dict[str, User] = Users.load_database(
             os.path.join(_input, "profile", "profile.csv")
