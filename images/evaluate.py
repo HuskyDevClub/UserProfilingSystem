@@ -29,6 +29,12 @@ class EvaluateImageModel:
     }
 
     @staticmethod
+    def __age_round(age_index: float) -> int:
+        age_index = round(age_index, 1)
+        ceiled_result: int = int(age_index)
+        return ceiled_result + 1 if age_index > ceiled_result + 0.75 else ceiled_result
+
+    @staticmethod
     def __start_predicting(
         category: str, idealIn: numpy.ndarray, greatestSquareIn: numpy.ndarray
     ) -> tuple[numpy.ndarray, numpy.ndarray]:
@@ -98,7 +104,7 @@ class EvaluateImageModel:
                 User(
                     userId,
                     Users.convert_to_age(
-                        ImageModels.AGE_RANGES[int(float(_prob["age"]))]
+                        ImageModels.AGE_RANGES[cls.__age_round(float(_prob["age"]))]
                     ),
                     ImageModels.GENDER_RANGES[numpy.argmax(_prob["gender"])],
                     round(float(_prob["extrovert"]) / 2, 3),

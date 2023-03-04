@@ -97,9 +97,6 @@ class TrainCnnImageModel:
             if _category == "gender":
                 plt.plot(result.history["accuracy"], label="accuracy")
                 plt.plot(result.history["val_accuracy"], label="val_accuracy")
-            else:
-                plt.plot(result.history["mse"], label="mse")
-                plt.plot(result.history["val_mse"], label="val_mse")
             plt.plot(result.history["loss"], label="loss")
             plt.plot(result.history["val_loss"], label="val_loss")
             plt.xlabel("epochs")
