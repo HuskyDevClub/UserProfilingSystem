@@ -9,6 +9,7 @@ from images.evaluate import EvaluateImageModel
 parser: argparse.ArgumentParser = argparse.ArgumentParser()
 parser.add_argument("-i", help="input folder")
 parser.add_argument("-o", help="output folder")
+parser.add_argument("-t", help="output type")
 args: argparse.Namespace = parser.parse_args()
 
 # obtain input and output directory from command line
@@ -21,4 +22,6 @@ if os.path.exists(outputDir):
 os.mkdir(outputDir)
 
 # EvaluateAverageModel.process(inputDir, outputDir)
-EvaluateImageModel.process(inputDir, outputDir)
+EvaluateImageModel.process(
+    inputDir, outputDir, "xml" if args.t is None else str(args.t)
+)

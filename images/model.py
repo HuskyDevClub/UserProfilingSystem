@@ -26,7 +26,7 @@ class ImageModels:
     )
     # classes
     GENDER_RANGES: Final[tuple[str, ...]] = tuple(sorted(["male", "female"]))
-    AGE_RANGES: Final[tuple[str, ...]] = tuple(sorted(["xx-24", "25-34"]))
+    AGE_RANGES: Final[tuple[str, ...]] = ("xx-24", "25-34", "35-49", "50-xx")
 
     # credit:
     # https://www.tensorflow.org/tutorials/images
@@ -51,13 +51,13 @@ class ImageModels:
         model.add(layers.Conv2D(128, (3, 3), padding="same", activation="relu"))
         model.add(layers.MaxPooling2D())
         # hidden layer 2
-        model.add(layers.Conv2D(256, (3, 3), padding="same", activation="relu"))
+        model.add(layers.Conv2D(128, (3, 3), padding="same", activation="relu"))
         model.add(layers.MaxPooling2D())
         # hidden layer 3
         model.add(layers.Conv2D(256, (3, 3), padding="same", activation="relu"))
         model.add(layers.MaxPooling2D())
         # hidden layer 4
-        model.add(layers.Conv2D(512, (3, 3), padding="same", activation="relu"))
+        model.add(layers.Conv2D(256, (3, 3), padding="same", activation="relu"))
         model.add(layers.MaxPooling2D())
         # hidden layer 5
         model.add(layers.Conv2D(512, (3, 3), padding="same", activation="relu"))
@@ -66,6 +66,8 @@ class ImageModels:
         # flatten
         model.add(layers.Flatten())
         # output layers
+        model.add(layers.Dense(256, activation="relu"))
+        model.add(layers.Dropout(0.1))
         model.add(layers.Dense(128, activation="relu"))
         model.add(output)
         # compile model

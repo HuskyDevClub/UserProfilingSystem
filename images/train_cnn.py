@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt  # type: ignore
 from tensorflow.data import AUTOTUNE  # type: ignore
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint  # type: ignore
 from tensorflow.keras.utils import image_dataset_from_directory  # type: ignore
+from utils.user import Users  # type: ignore
 
 from .classifier import Classifier
 from .images import Images
@@ -15,25 +16,55 @@ from .model import ImageModels
 class TrainCnnImageModel:
     savefig: bool = False
     epochs: int = 10
-    monitor: str = "val_accuracy"
+    monitor: str = "loss"
+    stop_early: bool = False
 
     @classmethod
     def __train(cls, _input: str, _category: str, mode: str):
-        # load data
-        full_dataset = image_dataset_from_directory(
-            os.path.join(_input, Classifier.CACHE_DIR, mode, _category),
-            image_size=Images.SIZE,
-        )
+        if _category == "gender":
+            # load data
+            full_dataset = image_dataset_from_directory(
+                os.path.join(_input, Classifier.CACHE_DIR, mode, _category),
+                image_size=Images.SIZE,
+            )
+            # load model
+            _model, _path = ImageModels.get_model(
+                _category, mode, len(full_dataset.class_names)
+            )
+        else:
+            _path = os.path.join(_input, Classifier.CACHE_DIR, mode, _category)
+            _files = []
+            for root, dirs, files in os.walk(os.path.join(_path, "image")):
+                _files = files
+                break
+            database = Users.load_database(
+                os.path.join(_input, "profile", "profile.csv")
+            )
+            # load data
+            full_dataset = image_dataset_from_directory(
+                _path,
+                image_size=Images.SIZE,
+                labels=[
+                    round(database[os.path.splitext(_path)[0]].get_ocean(_category) * 2)
+                    for _path in _files
+                ]
+                if _category != "age"
+                else [
+                    database[os.path.splitext(_path)[0]].get_age_group_index()
+                    for _path in _files
+                ],
+                label_mode="int",
+            )
+            # load model
+            _model, _path = ImageModels.get_model(_category, mode, 1)
+        # split data
         DATASET_SIZE: int = full_dataset.cardinality().numpy()
-        val_size = int(0.2 * DATASET_SIZE)
+        val_size = DATASET_SIZE // 4
         train_size = DATASET_SIZE - val_size
-        # get training data
+        # training data
         train_dataset = full_dataset.take(train_size)
+        # validation data
         val_dataset = full_dataset.skip(train_size)
-        # load model
-        _model, _path = ImageModels.get_model(
-            _category, mode, len(full_dataset.class_names)
-        )
         # prefetch data
         full_dataset.cache().prefetch(buffer_size=AUTOTUNE)
         # Model Checkpoint
@@ -50,18 +81,27 @@ class TrainCnnImageModel:
         early_stopping = EarlyStopping(
             monitor=cls.monitor, patience=max(cls.epochs // 3, min(5, cls.epochs))
         )
+        _callbacks = [check_pointer]
+        if cls.stop_early is True:
+            _callbacks.append(early_stopping)
         # Fit the model
         result = _model.fit(
             train_dataset,
             validation_data=val_dataset,
             epochs=cls.epochs,
-            callbacks=[check_pointer, early_stopping],
+            callbacks=_callbacks,
         )
         # show validation loss curve
         if cls.savefig is True:
             plt.clf()
-            plt.plot(result.history["accuracy"], label="accuracy")
-            plt.plot(result.history["val_accuracy"], label="val_accuracy")
+            if _category == "gender":
+                plt.plot(result.history["accuracy"], label="accuracy")
+                plt.plot(result.history["val_accuracy"], label="val_accuracy")
+            else:
+                plt.plot(result.history["mse"], label="mse")
+                plt.plot(result.history["val_mse"], label="val_mse")
+            plt.plot(result.history["loss"], label="loss")
+            plt.plot(result.history["val_loss"], label="val_loss")
             plt.xlabel("epochs")
             plt.xlabel("Epoch")
             plt.ylabel("Accuracy")

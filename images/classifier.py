@@ -52,9 +52,7 @@ class Classifier:
             )
             # classify by age
             cls.__copy_image_to(
-                current_image_path,
-                os.path.join(_out_dir, "age", _user.get_binary_age_group()),
-                mode,
+                current_image_path, os.path.join(_out_dir, "age", "image"), mode
             )
             # classify by gender
             cls.__copy_image_to(
@@ -65,13 +63,7 @@ class Classifier:
             # classify by ocean
             for _ocean in ImageModels.OCEAN:
                 cls.__copy_image_to(
-                    current_image_path,
-                    os.path.join(
-                        _out_dir,
-                        _ocean,
-                        str(round(_user.get_ocean(_ocean) * 2)),
-                    ),
-                    mode,
+                    current_image_path, os.path.join(_out_dir, _ocean, "image"), mode
                 )
             # print current progress
             currentIndex += 1
