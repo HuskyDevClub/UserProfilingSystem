@@ -16,7 +16,7 @@ from .model import ImageModels
 class TrainCnnImageModel:
     savefig: bool = False
     epochs: int = 10
-    monitor: str = "loss"
+    monitor: str = "val_loss"
     stop_early: bool = False
 
     @classmethod
