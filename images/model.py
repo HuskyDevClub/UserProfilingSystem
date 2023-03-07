@@ -21,12 +21,13 @@ class ImageModels:
         "agreeable",
         "neurotic",
     )
+    OCEAN_SCORE_AMPLIFY_SCALE: Final[int] = 10
     ALL_TARGET_ATTRIBUTES: Final[tuple[str, ...]] = tuple(
         ["age", "gender"] + list(OCEAN)
     )
     # classes
     GENDER_RANGES: Final[tuple[str, ...]] = tuple(sorted(["male", "female"]))
-    AGE_RANGES: Final[tuple[str, ...]] = ("xx-24", "25-34", "35-49", "50-xx")
+    AGE_RANGES: Final[tuple[str, ...]] = tuple(sorted(["xx-24", "25-34"]))
 
     # credit:
     # https://www.tensorflow.org/tutorials/images
@@ -48,27 +49,28 @@ class ImageModels:
         model.add(layers.RandomRotation(0.1))
         model.add(layers.Rescaling(1.0 / 255))
         # hidden layer 1
-        model.add(layers.Conv2D(128, (3, 3), padding="same", activation="relu"))
+        model.add(layers.Conv2D(64, (3, 3), padding="same", activation="relu"))
         model.add(layers.MaxPooling2D())
         # hidden layer 2
-        model.add(layers.Conv2D(128, (3, 3), padding="same", activation="relu"))
+        model.add(layers.Conv2D(64, (3, 3), padding="same", activation="relu"))
         model.add(layers.MaxPooling2D())
         # hidden layer 3
-        model.add(layers.Conv2D(256, (3, 3), padding="same", activation="relu"))
+        model.add(layers.Conv2D(128, (3, 3), padding="same", activation="relu"))
         model.add(layers.MaxPooling2D())
         # hidden layer 4
-        model.add(layers.Conv2D(256, (3, 3), padding="same", activation="relu"))
+        model.add(layers.Conv2D(128, (3, 3), padding="same", activation="relu"))
         model.add(layers.MaxPooling2D())
         # hidden layer 5
-        model.add(layers.Conv2D(512, (3, 3), padding="same", activation="relu"))
+        model.add(layers.Conv2D(256, (3, 3), padding="same", activation="relu"))
+        model.add(layers.MaxPooling2D())
+        # hidden layer 6
+        model.add(layers.Conv2D(256, (3, 3), padding="same", activation="relu"))
         model.add(layers.MaxPooling2D())
         model.add(layers.Dropout(0.2))
         # flatten
         model.add(layers.Flatten())
         # output layers
-        model.add(layers.Dense(256, activation="relu"))
-        model.add(layers.Dropout(0.1))
-        model.add(layers.Dense(128, activation="relu"))
+        model.add(layers.Dense(64, activation="relu"))
         model.add(output)
         # compile model
         model.compile(optimizer="adam", loss=_loss, metrics=metrics)

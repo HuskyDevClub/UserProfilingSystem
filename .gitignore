@@ -6,3 +6,4 @@ training/
 test.py
 average/model.json
 images/models
+count.txt

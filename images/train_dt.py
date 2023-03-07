@@ -46,15 +46,25 @@ class TrainImageDecisionTree:
             _imageND: numpy.ndarray = numpy.asarray(Images.load(_path))
             width, height, color = _imageND.shape
             inputs["scale"].append(0 if width == height else 1 if width > height else 2)
-            inputs["faces"].append(0 if len(Images.find_faces(_image)) <= 0 else 1)
+            inputs["faces"].append(0 if len(Images.find_faces(_image)) <= 0 else 1 if len(Images.find_faces(_image)) == 1 else 2)
             inputs["gender"].append(0 if value.get_gender() == "male" else 1)
             inputs["age"].append(value.get_age_group_index())
             inputs["size"].append(0 if os.path.getsize(_path) > SIZE_FRESH_HOLD else 1)
-            targets["open"].append(round(value.get_open()))
-            targets["conscientious"].append(round(value.get_conscientious()))
-            targets["extrovert"].append(round(value.get_extrovert()))
-            targets["agreeable"].append(round(value.get_agreeable()))
-            targets["neurotic"].append(round(value.get_neurotic()))
+            targets["open"].append(
+                round(value.get_open() * ImageModels.OCEAN_SCORE_AMPLIFY_SCALE)
+            )
+            targets["conscientious"].append(
+                round(value.get_conscientious() * ImageModels.OCEAN_SCORE_AMPLIFY_SCALE)
+            )
+            targets["extrovert"].append(
+                round(value.get_extrovert() * ImageModels.OCEAN_SCORE_AMPLIFY_SCALE)
+            )
+            targets["agreeable"].append(
+                round(value.get_agreeable() * ImageModels.OCEAN_SCORE_AMPLIFY_SCALE)
+            )
+            targets["neurotic"].append(
+                round(value.get_neurotic() * ImageModels.OCEAN_SCORE_AMPLIFY_SCALE)
+            )
             if _max is not None and current_index >= _max:
                 break
             current_index += 1

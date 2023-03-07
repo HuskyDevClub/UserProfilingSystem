@@ -15,13 +15,13 @@ from .model import ImageModels
 
 class TrainCnnImageModel:
     savefig: bool = False
-    epochs: int = 10
-    monitor: str = "val_loss"
+    epochs: int = 30
+    monitor: str | None = None
     stop_early: bool = False
 
     @classmethod
     def __train(cls, _input: str, _category: str, mode: str):
-        if _category == "gender":
+        if _category == "gender" or _category == "age":
             # load data
             full_dataset = image_dataset_from_directory(
                 os.path.join(_input, Classifier.CACHE_DIR, mode, _category),
@@ -31,6 +31,8 @@ class TrainCnnImageModel:
             _model, _path = ImageModels.get_model(
                 _category, mode, len(full_dataset.class_names)
             )
+            # default monitor for classify task
+            _monitor = "val_accuracy" if cls.monitor is None else cls.monitor
         else:
             _path = os.path.join(_input, Classifier.CACHE_DIR, mode, _category)
             _files = []
@@ -45,18 +47,18 @@ class TrainCnnImageModel:
                 _path,
                 image_size=Images.SIZE,
                 labels=[
-                    round(database[os.path.splitext(_path)[0]].get_ocean(_category) * 2)
-                    for _path in _files
-                ]
-                if _category != "age"
-                else [
-                    database[os.path.splitext(_path)[0]].get_age_group_index()
+                    round(
+                        database[os.path.splitext(_path)[0]].get_ocean(_category)
+                        * ImageModels.OCEAN_SCORE_AMPLIFY_SCALE
+                    )
                     for _path in _files
                 ],
                 label_mode="int",
             )
             # load model
             _model, _path = ImageModels.get_model(_category, mode, 1)
+            # default monitor for linear regression task
+            _monitor = "val_loss" if cls.monitor is None else cls.monitor
         # split data
         DATASET_SIZE: int = full_dataset.cardinality().numpy()
         val_size = DATASET_SIZE // 4
@@ -70,7 +72,7 @@ class TrainCnnImageModel:
         # Model Checkpoint
         check_pointer = ModelCheckpoint(
             _path,
-            monitor=cls.monitor,
+            monitor=_monitor,
             verbose=1,
             save_best_only=True,
             save_weights_only=False,
@@ -79,7 +81,7 @@ class TrainCnnImageModel:
         )
         # Model Early Stopping Rules
         early_stopping = EarlyStopping(
-            monitor=cls.monitor, patience=max(cls.epochs // 3, min(5, cls.epochs))
+            monitor=_monitor, patience=max(cls.epochs // 3, min(5, cls.epochs))
         )
         _callbacks = [check_pointer]
         if cls.stop_early is True:
@@ -94,7 +96,7 @@ class TrainCnnImageModel:
         # show validation loss curve
         if cls.savefig is True:
             plt.clf()
-            if _category == "gender":
+            if _category == "gender" or _category == "age":
                 plt.plot(result.history["accuracy"], label="accuracy")
                 plt.plot(result.history["val_accuracy"], label="val_accuracy")
             plt.plot(result.history["loss"], label="loss")

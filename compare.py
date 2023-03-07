@@ -12,7 +12,5 @@ for index, row in out.iterrows():
     if row["gender"] != profile[row["userid"]].get_gender():
         gender_error_counter += 1
 
-# 5116
-# 3876
 print(age_error_counter)
 print(gender_error_counter)

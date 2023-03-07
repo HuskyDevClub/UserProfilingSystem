@@ -20,14 +20,6 @@ class EvaluateImageModel:
     }
     """
 
-    OCEAN_AVERAGE = {
-        "agreeable": 3.58390421,
-        "conscientious": 3.44561684,
-        "extrovert": 3.48685789,
-        "neurotic": 2.73242421,
-        "open": 3.90869053,
-    }
-
     @staticmethod
     def __start_predicting(
         category: str, idealIn: numpy.ndarray, greatestSquareIn: numpy.ndarray
@@ -91,13 +83,33 @@ class EvaluateImageModel:
             results.append(
                 User(
                     userId,
-                    Users.convert_to_age(ImageModels.AGE_RANGES[int(_prob["age"])]),
+                    Users.convert_to_age(
+                        ImageModels.AGE_RANGES[numpy.argmax(_prob["age"])]
+                    ),
                     ImageModels.GENDER_RANGES[numpy.argmax(_prob["gender"])],
-                    round(float(_prob["extrovert"]) / 2, 3),
-                    round(float(_prob["neurotic"]) / 2, 3),
-                    round(float(_prob["agreeable"]) / 2, 3),
-                    round(float(_prob["conscientious"]) / 2, 3),
-                    round(float(_prob["open"]) / 2, 3),
+                    round(
+                        float(_prob["extrovert"])
+                        / ImageModels.OCEAN_SCORE_AMPLIFY_SCALE,
+                        2,
+                    ),
+                    round(
+                        float(_prob["neurotic"])
+                        / ImageModels.OCEAN_SCORE_AMPLIFY_SCALE,
+                        2,
+                    ),
+                    round(
+                        float(_prob["agreeable"])
+                        / ImageModels.OCEAN_SCORE_AMPLIFY_SCALE,
+                        2,
+                    ),
+                    round(
+                        float(_prob["conscientious"])
+                        / ImageModels.OCEAN_SCORE_AMPLIFY_SCALE,
+                        2,
+                    ),
+                    round(
+                        float(_prob["open"]) / ImageModels.OCEAN_SCORE_AMPLIFY_SCALE, 2
+                    ),
                 )
             )
         assert currentUserIdealImageIndex == len(user_has_ideal_image)
