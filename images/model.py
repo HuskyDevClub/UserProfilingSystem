@@ -27,7 +27,9 @@ class ImageModels:
     )
     # classes
     GENDER_RANGES: Final[tuple[str, ...]] = tuple(sorted(["male", "female"]))
-    AGE_RANGES: Final[tuple[str, ...]] = tuple(sorted(["xx-24", "25-34"]))
+    AGE_RANGES: Final[tuple[str, ...]] = tuple(
+        sorted(["xx-24", "25-34", "35-49", "50-xx"])
+    )
 
     # credit:
     # https://www.tensorflow.org/tutorials/images
@@ -42,7 +44,7 @@ class ImageModels:
         # input layer
         model.add(
             layers.RandomFlip(
-                "horizontal", input_shape=(Images.SIZE[0], Images.SIZE[1], 3)
+                "horizontal", input_shape=(Images.SIZE[0], Images.SIZE[1], 1)
             )
         )
         # normalize
@@ -64,13 +66,13 @@ class ImageModels:
         model.add(layers.Conv2D(256, (3, 3), padding="same", activation="relu"))
         model.add(layers.MaxPooling2D())
         # hidden layer 6
-        model.add(layers.Conv2D(256, (3, 3), padding="same", activation="relu"))
+        model.add(layers.Conv2D(512, (3, 3), padding="same", activation="relu"))
         model.add(layers.MaxPooling2D())
-        model.add(layers.Dropout(0.2))
         # flatten
         model.add(layers.Flatten())
         # output layers
         model.add(layers.Dense(64, activation="relu"))
+        model.add(layers.Dropout(0.2))
         model.add(output)
         # compile model
         model.compile(optimizer="adam", loss=_loss, metrics=metrics)

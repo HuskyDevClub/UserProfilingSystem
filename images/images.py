@@ -70,11 +70,14 @@ class Images:
         faces = cls.find_faces(_img)
         if len(faces) >= 1:
             x, y, w, h = faces[0]
-            return cls.__obtain_greatest_square(_img), cls.resize(
-                _img[y : y + h, x : x + w]
-            )
+            return cv2.cvtColor(
+                cls.__obtain_greatest_square(_img), cv2.COLOR_BGR2GRAY
+            ), cv2.cvtColor(cls.resize(_img[y : y + h, x : x + w]), cv2.COLOR_BGR2GRAY)
         else:
-            return cls.__obtain_greatest_square(_img), None
+            return (
+                cv2.cvtColor(cls.__obtain_greatest_square(_img), cv2.COLOR_BGR2GRAY),
+                None,
+            )
 
     @classmethod
     def __obtain_greatest_square(cls, _img: cv2.Mat) -> cv2.Mat:

@@ -7,7 +7,8 @@
         "pyplot",
         "sklearn",
         "spamreader",
-        "userid"
+        "userid",
+        "UTKFACE"
     ],
     "python.analysis.typeCheckingMode": "basic"
 }

@@ -20,6 +20,15 @@ class EvaluateImageModel:
     }
     """
 
+    OCEAN_AVERAGE = {
+        "agreeable": 3.58390421,
+        "conscientious": 3.44561684,
+        "extrovert": 3.48685789,
+        "neurotic": 2.73242421,
+        "open": 3.90869053,
+    }
+    __ATTRIBUTES = ["gender", "age"]
+
     @staticmethod
     def __start_predicting(
         category: str, idealIn: numpy.ndarray, greatestSquareIn: numpy.ndarray
@@ -62,7 +71,7 @@ class EvaluateImageModel:
         )
         gc.collect()
         predictions: dict[str, numpy.ndarray] = {}
-        for key in ImageModels.ALL_TARGET_ATTRIBUTES:
+        for key in cls.__ATTRIBUTES:
             (
                 predictions[key + "_ideal"],
                 predictions[key + "_greatest_square"],
@@ -73,10 +82,10 @@ class EvaluateImageModel:
         for i in range(len(_user_ids)):
             userId: str = _user_ids[i]
             _prob: dict[str, numpy.ndarray] = {}
-            for key in ImageModels.ALL_TARGET_ATTRIBUTES:
+            for key in cls.__ATTRIBUTES:
                 _prob[key] = predictions[key + "_greatest_square"][i]
             if userId == user_has_ideal_image[currentUserIdealImageIndex]:
-                for key in ImageModels.ALL_TARGET_ATTRIBUTES:
+                for key in cls.__ATTRIBUTES:
                     if len(ideal_predictions := predictions[key + "_ideal"]) > 0:
                         _prob[key] = ideal_predictions[currentUserIdealImageIndex]
                 currentUserIdealImageIndex += 1
@@ -87,29 +96,11 @@ class EvaluateImageModel:
                         ImageModels.AGE_RANGES[numpy.argmax(_prob["age"])]
                     ),
                     ImageModels.GENDER_RANGES[numpy.argmax(_prob["gender"])],
-                    round(
-                        float(_prob["extrovert"])
-                        / ImageModels.OCEAN_SCORE_AMPLIFY_SCALE,
-                        2,
-                    ),
-                    round(
-                        float(_prob["neurotic"])
-                        / ImageModels.OCEAN_SCORE_AMPLIFY_SCALE,
-                        2,
-                    ),
-                    round(
-                        float(_prob["agreeable"])
-                        / ImageModels.OCEAN_SCORE_AMPLIFY_SCALE,
-                        2,
-                    ),
-                    round(
-                        float(_prob["conscientious"])
-                        / ImageModels.OCEAN_SCORE_AMPLIFY_SCALE,
-                        2,
-                    ),
-                    round(
-                        float(_prob["open"]) / ImageModels.OCEAN_SCORE_AMPLIFY_SCALE, 2
-                    ),
+                    cls.OCEAN_AVERAGE["extrovert"],
+                    cls.OCEAN_AVERAGE["neurotic"],
+                    cls.OCEAN_AVERAGE["agreeable"],
+                    cls.OCEAN_AVERAGE["conscientious"],
+                    cls.OCEAN_AVERAGE["open"],
                 )
             )
         assert currentUserIdealImageIndex == len(user_has_ideal_image)
