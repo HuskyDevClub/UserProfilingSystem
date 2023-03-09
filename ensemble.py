@@ -7,6 +7,7 @@ import pandas  # type: ignore
 from images.evaluate import EvaluateImageModel
 from images.model import ImageModels
 from text.main import text_prediction
+from likes.likes import likes_prediction
 from utils.user import Users
 
 # using argparse to parse the argument from command line
@@ -28,10 +29,13 @@ os.mkdir(outputDir)
 text_prediction(inputDir, outputDir)
 # predict based on image
 EvaluateImageModel.process(inputDir, outputDir, "csv")
+# predict based on likes
+likes_prediction(inputDir, outputDir)
 
 resultCsvPath: dict[str, str] = {
     "image": os.path.join(outputDir, "image_out.csv"),
     "text": os.path.join(outputDir, "text_out.csv"),
+    "likes": os.path.join(outputDir, "likes_out.csv")
 }
 
 
