@@ -2,19 +2,24 @@ import os
 import pickle
 import random
 import shutil
-import joblib
+import xml.etree.ElementTree as ET
 
+import joblib
 import numpy as np
 import pandas as pd
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.linear_model import LogisticRegression
 
-import xml.etree.ElementTree as ET
+from utils.user import User, Users
 
 
-def text_prediction(input_directory: str, output_directory: str):
-    profile_directory = os.path.join("/data", "training", "profile")
-    text_directory = os.path.join("/data", "training", "text")
+def text_prediction(input_directory: str, output_directory: str, _o_type: str = "xml"):
+    if os.path.exists(os.path.join("/data", "training")):
+        profile_directory = os.path.join("/data", "training", "profile")
+        text_directory = os.path.join("/data", "training", "text")
+    else:
+        profile_directory = os.path.join("training", "profile")
+        text_directory = os.path.join("training", "text")
     # tsv_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'User_Text_to_Gender.tsv')
     tsv_file = "User_Text_to_Gender.tsv"
 
@@ -43,8 +48,6 @@ def text_prediction(input_directory: str, output_directory: str):
                 gender = float(data[3])
                 tsv.write(str(user_id) + "\t" + str(text) + "\t" + str(gender) + "\n")
 
-    profile_directory2 = input_directory + "profile"
-    text_directory2 = input_directory + "text"
     # tsv_file2 = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'User_Text_to_Gender2.tsv')
     tsv_file2 = "User_Text_to_Gender2.tsv"
 
@@ -53,7 +56,7 @@ def text_prediction(input_directory: str, output_directory: str):
 
     with open(tsv_file2, "w") as tsv:
         tsv.write("Id" + "\t" + "status" + "\t" + "gender" + "\n")
-        with open(os.path.join(profile_directory2, "profile.csv")) as data_file:
+        with open(os.path.join(input_directory, "profile", "profile.csv")) as data_file:
             next(data_file)
 
             user_id = ""
@@ -64,7 +67,7 @@ def text_prediction(input_directory: str, output_directory: str):
                 data = line.split(",")
                 user_id = data[1]
                 with open(
-                    os.path.join(text_directory, user_id + ".txt"),
+                    os.path.join(input_directory, "text", user_id + ".txt"),
                     "r",
                     encoding="latin1",
                 ) as text_file:
@@ -212,22 +215,43 @@ def text_prediction(input_directory: str, output_directory: str):
     with open(input_directory + "profile/profile.csv") as data_file:
         next(data_file)
 
-        for line in data_file:
-            data = line.split(",")
-
-            id = data[1]
-
-            user = ET.Element("user")
-            user.set("id", id)
-            user.set("age_group", popular_age)
-            user.set("gender", getPredictedValue(id))
-            user.set("extrovert", str(popular_personality[0]))
-            user.set("neurotic", str(popular_personality[1]))
-            user.set("agreeable", str(popular_personality[2]))
-            user.set("conscientious", str(popular_personality[3]))
-            user.set("open", str(popular_personality[4]))
-            user_data = ET.tostring(user)
-            user_file = open(output_directory + id + ".xml", "wb")
-            user_file.write(user_data)
+        if _o_type == "xml":
+            for line in data_file:
+                data = line.split(",")
+                _id = data[1]
+                user = ET.Element("user")
+                user.set("id", _id)
+                user.set("age_group", popular_age)
+                user.set("gender", getPredictedValue(_id))
+                user.set("extrovert", str(popular_personality[0]))
+                user.set("neurotic", str(popular_personality[1]))
+                user.set("agreeable", str(popular_personality[2]))
+                user.set("conscientious", str(popular_personality[3]))
+                user.set("open", str(popular_personality[4]))
+                user_data = ET.tostring(user)
+                user_file = open(output_directory + _id + ".xml", "wb")
+                user_file.write(user_data)
+        else:
+            _df: pd.DataFrame | None = None
+            for line in data_file:
+                data = line.split(",")
+                _id = data[1]
+                _user: User = User(
+                    _id,
+                    Users.convert_to_age(popular_age),
+                    getPredictedValue(_id),
+                    float(popular_personality[0]),
+                    float(popular_personality[1]),
+                    float(popular_personality[2]),
+                    float(popular_personality[3]),
+                    float(popular_personality[4]),
+                )
+                _df = (
+                    pd.concat([_df, _user.get_data_frame()], ignore_index=True)
+                    if _df is not None
+                    else _user.get_data_frame()
+                )
+            assert _df is not None
+            _df.to_csv(os.path.join(output_directory, "text_out.csv"))
 
     print("Finished")

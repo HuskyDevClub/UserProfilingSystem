@@ -1,5 +1,5 @@
 from utils.user import Users
-import pandas
+import pandas  # type: ignore
 
 profile = Users.load_database("./training/profile/profile.csv")
 out = pandas.read_csv("./output/image_out.csv")

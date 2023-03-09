@@ -144,8 +144,10 @@ class Users:
             return 34
         elif _age_group == "35-49":
             return 49
-        else:
+        elif _age_group == "50-xx":
             return 50
+        else:
+            raise Exception("Unknown age group:", _age_group)
 
     @staticmethod
     def convert_age_group(_age: float | int) -> str:
@@ -182,9 +184,17 @@ class Users:
 
     @classmethod
     def from_dict(cls, _data: dict[str, Any]) -> User:
+        _age: int = -1
+        if (
+            not isinstance(_data["age"], str)
+            or _data["age"].replace(".", "", 1).isnumeric()
+        ):
+            _age = round(float(_data["age"]))
+        elif _data["age"] != "-":
+            _age = cls.convert_to_age(_data["age"])
         return User(
             _data["userid"],
-            round(float(_data["age"])) if _data["age"] != "-" else -1,
+            _age,
             cls.convert_gender(_data["gender"]) if _data["gender"] != "-" else "male",
             float(_data["ext"]) if _data["ext"] != "-" else -1,
             float(_data["neu"]) if _data["neu"] != "-" else -1,
