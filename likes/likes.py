@@ -11,12 +11,14 @@ from sklearn.metrics import accuracy_score
 from sklearn.model_selection import train_test_split
 from sklearn.svm import SVR
 
-# Debugging
-debug: bool = False
-ensemble: bool = True
 
-
-def likes_prediction(input_directory: str, output_directory: str):
+def likes_prediction(
+    input_directory: str,
+    output_directory: str,
+    ensemble: bool = True,
+    debug: bool = False,
+    _o_type: str = "xml",
+):
     start_time: float = t.time()
 
     # Get information
@@ -105,7 +107,7 @@ def likes_prediction(input_directory: str, output_directory: str):
     else:
         print("BEGINNING PROCESS")
 
-    # # For age and gender
+    # For age and gender
     for column in dfm.columns[2:4]:
         if ensemble:
             print("'Likes' Processing: %s ..." % column)
@@ -164,6 +166,7 @@ def likes_prediction(input_directory: str, output_directory: str):
             if not os.path.exists(outputDir):
                 os.mkdir(outputDir)
 
+        if _o_type == "xml":
             output: str = """<user
     id="{}"
 age_group="{}"
@@ -191,6 +194,9 @@ open="{}"
                             row[5],
                         )
                     )  # ope
+        elif _o_type == "csv":
+            df3 = df3.drop(["like_id"], axis=1)
+            df3.to_csv(os.path.join(outputDir, "likes_out.csv"))
 
     elapsed_time: float = t.time() - start_time
     if ensemble:
@@ -199,10 +205,11 @@ open="{}"
         print("PROCESS COMPLETE: %.2f SECONDS" % elapsed_time)
 
 
-if not ensemble:
+if __name__ == "__main__":
     # Using argparse to parse the argument from command line
     parser: ap.ArgumentParser = ap.ArgumentParser()
     parser.add_argument("-i", help="input folder")
     parser.add_argument("-o", help="output folder")
+    parser.add_argument("-d", "--debug", action="store_true", help="debugging help")
     args: ap.Namespace = parser.parse_args()
-    likes_prediction(args.i, args.o)
+    likes_prediction(args.i, args.o, False, args.debug)
