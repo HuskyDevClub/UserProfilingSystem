@@ -25,17 +25,17 @@ if os.path.exists(outputDir):
     shutil.rmtree(outputDir)
 os.mkdir(outputDir)
 
+# predict based on likes
+likes_prediction(inputDir, outputDir)
 # predict based on text
 text_prediction(inputDir, outputDir)
 # predict based on image
 EvaluateImageModel.process(inputDir, outputDir, "csv")
-# predict based on likes
-likes_prediction(inputDir, outputDir)
 
 resultCsvPath: dict[str, str] = {
     "image": os.path.join(outputDir, "image_out.csv"),
     "text": os.path.join(outputDir, "text_out.csv"),
-    "likes": os.path.join(outputDir, "likes_out.csv")
+    "likes": os.path.join(outputDir, "likes_out.csv"),
 }
 
 
@@ -58,11 +58,13 @@ for index, row in profile.iterrows():
     for k in ImageModels.OCEAN:
         lr_counter[k[:3]] = 0
     for v in resultsInCsv.values():
-        each_vote = v.loc[index]  # type: ignore
-        classification_counter["gender"][each_vote["gender"]] += 1
-        classification_counter["age"][each_vote["age"]] += 1
+        each_vote = v.loc[v["userid"] == row["userid"]]
+        classification_counter["gender"][each_vote["gender"].values[0]] += 1
+        classification_counter["age"][each_vote["age"].values[0]] += 1
         for k in ImageModels.OCEAN:
-            classification_counter[k[:3]] += each_vote[k[:3]]
+            classification_counter[k[:3]] = (
+                classification_counter.get(k[:3], 0) + each_vote[k[:3]].values[0]
+            )
 
     row["gender"] = max(
         classification_counter["gender"], key=classification_counter["gender"].get  # type: ignore
@@ -71,5 +73,5 @@ for index, row in profile.iterrows():
         classification_counter["age"], key=classification_counter["age"].get  # type: ignore
     )
     for k in ImageModels.OCEAN:
-        row[k] = round(lr_counter[k] / len(resultsInCsv), 3)
+        row[k[:3]] = round(lr_counter[k[:3]] / len(resultsInCsv), 3)
     Users.from_dict(row.to_dict()).save(outputDir)

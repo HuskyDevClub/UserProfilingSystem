@@ -174,10 +174,14 @@ class Users:
             return 3
 
     @staticmethod
-    def convert_gender(_gender: int) -> str:
+    def convert_gender(_gender: str) -> str:
         if _gender == "0.0":
             return "male"
         elif _gender == "1.0":
+            return "female"
+        elif _gender == "male":
+            return "male"
+        elif _gender == "female":
             return "female"
         else:
             raise Exception("unknown gender")
