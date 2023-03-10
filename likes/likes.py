@@ -164,18 +164,7 @@ def likes_prediction(
             os.mkdir(outputDir)
 
         if _o_type == "xml":
-            output: str = """<user
-    id="{}"
-age_group="{}"
-gender="{}"
-extrovert="{}"
-neurotic="{}"
-agreeable="{}"
-conscientious="{}"
-open="{}"
-/>
-"""
-
+            output: str = '<user id="{}" age_group="{}" gender="{}" extrovert="{}" neurotic="{}" agreeable="{}" conscientious="{}" open="{}"/>'
             # Each row to a separate xml
             for row in df3.itertuples():
                 with open(os.path.join(outputDir, f"{row[1]}.xml"), "w") as f:

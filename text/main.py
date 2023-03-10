@@ -205,10 +205,7 @@ def text_prediction(input_directory: str, output_directory: str, _o_type: str = 
     print(popular_personality)
     print("****************************************\n")
 
-    if os.path.exists(output_directory):
-        shutil.rmtree(output_directory)
-
-    os.makedirs(output_directory)
+    os.makedirs(output_directory, exist_ok=True)
 
     print("\nWriting results to XML files...\n")
 

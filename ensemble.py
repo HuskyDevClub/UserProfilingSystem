@@ -25,21 +25,18 @@ if os.path.exists(outputDir):
     shutil.rmtree(outputDir)
 os.mkdir(outputDir)
 
-# predict based on likes
-likes_prediction(inputDir, outputDir)
 # predict based on text
-text_prediction(inputDir, outputDir)
-# predict based on image
-EvaluateImageModel.process(inputDir, outputDir, "csv")
+text_prediction(inputDir, outputDir, "csv")
 # predict based on likes
 likes_prediction(inputDir, outputDir, _o_type="csv")
+# predict based on image
+EvaluateImageModel.process(inputDir, outputDir, "csv")
 
 resultCsvPath: dict[str, str] = {
     "image": os.path.join(outputDir, "image_out.csv"),
     "text": os.path.join(outputDir, "text_out.csv"),
     "likes": os.path.join(outputDir, "likes_out.csv"),
 }
-
 
 resultsInCsv: dict[str, pandas.DataFrame] = {}
 
@@ -64,9 +61,7 @@ for index, row in profile.iterrows():
         classification_counter["gender"][each_vote["gender"].values[0]] += 1
         classification_counter["age"][each_vote["age"].values[0]] += 1
         for k in ImageModels.OCEAN:
-            classification_counter[k[:3]] = (
-                classification_counter.get(k[:3], 0) + each_vote[k[:3]].values[0]
-            )
+            lr_counter[k[:3]] += each_vote[k[:3]].values[0]
 
     row["gender"] = max(
         classification_counter["gender"], key=classification_counter["gender"].get  # type: ignore
