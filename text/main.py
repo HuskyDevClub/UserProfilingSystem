@@ -97,7 +97,7 @@ def text_prediction(input_directory: str, output_directory: str, _o_type: str = 
     test_Ids = all_Ids[0:n]
     train_Ids = all_Ids[n:]
     data_test = data_statuses.loc[test_Ids, :]
-    data_train = data.statuses.loc[train_Ids, :]
+    data_train = data_statuses.loc[train_Ids, :]
 
     vect = CountVectorizer()
 
