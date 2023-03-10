@@ -159,12 +159,9 @@ def likes_prediction(
             df3[column] = svreg.predict(count_vect.transform(df3["like_id"]))
 
     if not debug:
-        if ensemble:
-            df3.to_csv(os.path.join(outputDir, "likes_out.csv"))
-        else:
-            # Check to see if out folder exists
-            if not os.path.exists(outputDir):
-                os.mkdir(outputDir)
+        # Check to see if out folder exists
+        if not os.path.exists(outputDir):
+            os.mkdir(outputDir)
 
         if _o_type == "xml":
             output: str = """<user
@@ -191,9 +188,9 @@ open="{}"
                             row[9],  # neu
                             row[8],  # agr
                             row[6],  # con
-                            row[5],
+                            row[5],  # ope
                         )
-                    )  # ope
+                    )
         elif _o_type == "csv":
             df3 = df3.drop(["like_id"], axis=1)
             df3.to_csv(os.path.join(outputDir, "likes_out.csv"))
