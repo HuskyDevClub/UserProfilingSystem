@@ -12,9 +12,13 @@ from sklearn.model_selection import train_test_split
 from sklearn.svm import SVR
 
 
-def likes_prediction(input_directory: str, output_directory: str,
-                     ensemble: bool = True, debug: bool = False,
-                     _o_type: str = "xml"):
+def likes_prediction(
+    input_directory: str,
+    output_directory: str,
+    ensemble: bool = True,
+    debug: bool = False,
+    _o_type: str = "xml",
+):
     start_time: float = t.time()
 
     # Get information
@@ -177,19 +181,22 @@ open="{}"
 
             # Each row to a separate xml
             for row in df3.itertuples():
-                with open(os.path.join(outputDir, f'{row[1]}.xml'), 'w') as f:
-                    f.write(output.format(
-                        row[1],  # userid
-                        row[3],  # age_group
-                        row[4],  # gender
-                        row[7],  # ext
-                        row[9],  # neu
-                        row[8],  # agr
-                        row[6],  # con
-                        row[5]))  # ope
+                with open(os.path.join(outputDir, f"{row[1]}.xml"), "w") as f:
+                    f.write(
+                        output.format(
+                            row[1],  # userid
+                            row[3],  # age_group
+                            row[4],  # gender
+                            row[7],  # ext
+                            row[9],  # neu
+                            row[8],  # agr
+                            row[6],  # con
+                            row[5],
+                        )
+                    )  # ope
         elif _o_type == "csv":
-            df3 = df3.drop(['like_id'], axis=1)
-            df3.to_csv(os.path.join(outputDir, 'likes_out.csv'))
+            df3 = df3.drop(["like_id"], axis=1)
+            df3.to_csv(os.path.join(outputDir, "likes_out.csv"))
 
     elapsed_time: float = t.time() - start_time
     if ensemble:

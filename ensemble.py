@@ -32,7 +32,7 @@ text_prediction(inputDir, outputDir)
 # predict based on image
 EvaluateImageModel.process(inputDir, outputDir, "csv")
 # predict based on likes
-likes_prediction(inputDir, outputDir, "csv")
+likes_prediction(inputDir, outputDir, _o_type="csv")
 
 resultCsvPath: dict[str, str] = {
     "image": os.path.join(outputDir, "image_out.csv"),
