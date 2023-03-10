@@ -13,32 +13,31 @@ from sklearn.svm import SVR
 
 
 def likes_prediction(
-    input_directory: str,
-    output_directory: str,
-    ensemble: bool = True,
-    debug: bool = False,
-    _o_type: str = "xml",
+        input_directory: str,
+        output_directory: str,
+        ensemble: bool = True,
+        debug: bool = False,
+        _o_type: str = "xml",
 ):
     start_time: float = t.time()
 
     # Get information
     if debug:
+        inputDir: str = "C:/temp/tcss455/public-test-data/"
         outputDir: str = "C:/temp/tcss455/output/"
 
         df1 = pd.read_csv("C:/temp/tcss455/training/relation/relation.csv", index_col=0)
         df2 = pd.read_csv("C:/temp/tcss455/training/profile/profile.csv", index_col=0)
-        df3 = pd.read_csv(
-            "C:/temp/tcss455/public-test-data/relation/relation.csv", index_col=0
-        )
     else:
         inputDir: str = input_directory
         outputDir: str = output_directory
 
         df1 = pd.read_csv("/data/training/relation/relation.csv", index_col=0)
         df2 = pd.read_csv("/data/training/profile/profile.csv", index_col=0)
-        df3 = pd.read_csv(
-            os.path.join(inputDir, "relation", "relation.csv"), index_col=0
-        )
+
+    df3 = pd.read_csv(
+        os.path.join(inputDir, "relation", "relation.csv"), index_col=0
+    )
 
     # Filter out the least common likes (occurrence of 1)
     """
@@ -110,15 +109,15 @@ def likes_prediction(
     # For age and gender
     for column in dfm.columns[2:4]:
         if ensemble:
-            print("'Likes' Processing: %s ..." % column)
+            print("'Likes' Processing: %s ..." % column[:3])
         else:
-            print("Processing: %s ..." % column)
+            print("Processing: %s ..." % column[:3])
         X_train, X_test, y_train, y_test = train_test_split(
             dfm["like_id"], dfm[column], test_size=testSize
         )
         X_train = count_vect.fit_transform(X_train)
         if column == "age":
-            logreg = LogisticRegression(C=1, solver="lbfgs", multi_class="multinomial")
+            logreg = LogisticRegression(C=1, solver="lbfgs", multi_class="multinomial", max_iter=400)
         else:
             logreg = LogisticRegression()
         logreg.fit(X_train, y_train)
@@ -164,7 +163,8 @@ def likes_prediction(
             os.mkdir(outputDir)
 
         if _o_type == "xml":
-            output: str = '<user id="{}" age_group="{}" gender="{}" extrovert="{}" neurotic="{}" agreeable="{}" conscientious="{}" open="{}"/>'
+            output: str = '<user\n\tid="{}"\nage_group="{}"\ngender="{}"\nextrovert="{}"' \
+                          '\nneurotic="{}"\nagreeable="{}"\nconscientious="{}"\nopen="{}"\n/>'
             # Each row to a separate xml
             for row in df3.itertuples():
                 with open(os.path.join(outputDir, f"{row[1]}.xml"), "w") as f:
