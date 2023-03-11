@@ -10,7 +10,7 @@ average - A model to extract and calculate average / most frequent results from 
 
 images - A CNN model which makes predictions based on image.
 
-utils - A set of tools / classes to allow easier manage of data.
+utils - A set of tools / classes to allow easier management of data.
 
 ensemble.py - A script that outputs predictions based on predictions from all three models.
 
