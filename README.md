@@ -1,24 +1,35 @@
 # User Profiling System
 
-An advance user profiling system developed by Yudong Lin, Anthony Nguyen and Brian M LeSmith.
+An advance user profiling system developed by Yudong Lin, Anthony Nguyen, and Brian M LeSmith.
 
+## Directory / Files Description
 
+### Author: Yudong Lin
 
-# Directory / Files Description
+average - A model to extract and calculate average / most frequent results from the training data.
 
-average - A model create by Yudong Lin to extract and calculate average / most frequency result from the training data.
+images - A CNN model which makes predictions based on image.
 
-images - A CNN model created by Yudong Lin which make prediction based on image
+utils - A set of tools / classes to allow easier manage of data.
 
-likes - A model created by Anthony Nguyen which make prediction based on likes
+ensemble.py - A script that outputs predictions based on predictions from all three models.
 
-text - A model created by Brian M LeSmith which make prediction based on text
+evaluate.py - A script that outputs predictions based on a specific model.
 
-utils - A set of tools / classes created by Yudong Lin to allow easier manage of data.
+train.py - A script that allows a developer to train a specific model according to given parameters.
 
-ensemble.py - A script created by Yudong Lin that output the prediction based on the predictions from all three models.
+### Author: Anthony Nguyen
 
-evaluate.py - A script created by Yudong Lin that output the prediction based on the a specific model.
+likes - A model which makes predictions based on likes.
 
-train.py - A script created by Yudong Lin that allow the developer to train a specific model according to given parameters.
+### Author: Brian M LeSmith
 
+text - A model which makes predictions based on text.
+
+## Requirements
+
+images - Keras, TensorFlow
+
+likes - scikit-learn
+
+text - scikit-learn
